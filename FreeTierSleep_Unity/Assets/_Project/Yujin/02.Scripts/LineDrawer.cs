@@ -43,6 +43,7 @@ public class LineDrawer : MonoBehaviour
     {
         GameObject obj = new GameObject("Stroke");
         _currentStroke = obj.AddComponent<Stroke>();
+        obj.AddComponent<LineCollision>();
         _currentStroke.Initialize(vertexLifetime);
         _activeStrokes.Add(_currentStroke);
     }

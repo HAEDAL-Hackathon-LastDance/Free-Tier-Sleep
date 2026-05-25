@@ -37,6 +37,8 @@ public class Stroke : MonoBehaviour
         _lr.useWorldSpace = true;
         _lr.positionCount = 0;
 
+        _col.isTrigger = true;
+
         _initialized = true;
     }
 
@@ -63,6 +65,15 @@ public class Stroke : MonoBehaviour
 
         _vertices.Enqueue(new VertexData { position = newPos, spawnTime = Time.time });
         _hasPoints = true;
+    }
+
+    public void EatLastVertex()
+    {
+        if (_vertices.Count == 0) return;
+        VertexData[] arr = _vertices.ToArray();
+        _vertices.Clear();
+        for (int i = 0; i < arr.Length - 1; i++)
+            _vertices.Enqueue(arr[i]);
     }
 
     private void RemoveExpiredVertices()
