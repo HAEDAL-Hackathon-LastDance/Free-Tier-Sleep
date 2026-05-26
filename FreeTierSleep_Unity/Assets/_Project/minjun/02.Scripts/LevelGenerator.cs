@@ -4,12 +4,12 @@ using UnityEngine;
 public class LevelGenerator : MonoBehaviour
 {
     [Header("References")]
-    public Transform player;
+    public Transform cameraTransform;
     public Camera mainCamera;
     
     [Header("Generation Settings")]
     public float targetAltitude = 1000f; // 최종 목표 고도
-    public float spawnYThreshold = 15f;  // 플레이어 기준 위로 얼마만큼 미리 생성할지
+    public float spawnYThreshold = 15f;  // 카메라 기준 위로 얼마만큼 미리 생성할지 (기본값 유지, 조건문에서는 10f 사용)
     public float minXClamp = -7f;        // 화면 좌측 한계선
     public float maxXClamp = 7f;         // 화면 우측 한계선
 
@@ -23,7 +23,7 @@ public class LevelGenerator : MonoBehaviour
     {
         if (mainCamera == null) mainCamera = Camera.main;
 
-        // 초기 시작 발판 위치 설정 (플레이어 시작 위치 근처)
+        // 초기 시작 발판 위치 설정
         lastPlatformPos = new Vector2(0f, -2f);
         
         // 시작 시 기본 발판 몇 개 미리 생성
@@ -37,17 +37,17 @@ public class LevelGenerator : MonoBehaviour
     {
         if (isLevelComplete) return;
 
-        // 플레이어가 목표 고도에 도달했는지 체크
-        if (player.position.y >= targetAltitude)
+        // 목표 고도에 도달했는지 체크
+        if (cameraTransform.position.y >= targetAltitude)
         {
             isLevelComplete = true;
             Debug.Log("목표 고도 도달! 클리어 컷신으로 전환 필요.");
-            // TODO: 플레이어 조작 잠금 및 컷신 전환 로직 호출
+            // TODO: 조작 잠금 및 컷신 전환 로직 호출
             return;
         }
 
-        // 플레이어의 Y좌표를 기준으로 일정 높이(spawnYThreshold) 이내에 발판이 부족하면 추가 생성
-        if (player.position.y + spawnYThreshold > lastPlatformPos.y)
+        // 카메라의 Y좌표를 기준으로 10f 이내에 발판이 부족하면 추가 생성
+        if (cameraTransform.position.y + 10f > lastPlatformPos.y)
         {
             SpawnNextPlatform();
         }
@@ -59,11 +59,11 @@ public class LevelGenerator : MonoBehaviour
     private void SpawnNextPlatform()
     {
         // 난이도 조절: 고도가 높아질수록 발판 사이의 Y축 거리가 멀어짐 (최대 5f까지 증가)
-        float progressRatio = Mathf.Clamp01(player.position.y / targetAltitude);
+        float progressRatio = Mathf.Clamp01(cameraTransform.position.y / targetAltitude);
         float currentMinY = Mathf.Lerp(2.0f, 3.5f, progressRatio);
         float currentMaxY = Mathf.Lerp(3.5f, 5.0f, progressRatio);
 
-        // 기획서 문제점 1 해결: 이전 발판(lastPlatformPos) 기준으로 타이트한 난수 적용
+        // 이전 발판(lastPlatformPos) 기준으로 타이트한 난수 적용
         float randomXOffset = Random.Range(-4f, 4f);
         float randomYOffset = Random.Range(currentMinY, currentMaxY);
 
@@ -73,10 +73,11 @@ public class LevelGenerator : MonoBehaviour
         // X축이 화면 밖으로 무한정 나가지 않도록 Clamp 처리
         nextX = Mathf.Clamp(nextX, minXClamp, maxXClamp);
 
+        // ObjectPooler를 이용해 발판 스폰 (새로운 위치 파라미터 전달)
+        GameObject platform = ObjectPooler.Instance.SpawnFromPool("Platform", new Vector2(nextX, nextY), Quaternion.identity);
+        
+        // 스폰 직후 기준점을 최신으로 갱신
         lastPlatformPos = new Vector2(nextX, nextY);
-
-        // ObjectPooler를 이용해 발판 스폰
-        GameObject platform = ObjectPooler.Instance.SpawnFromPool("Platform", lastPlatformPos, Quaternion.identity);
         
         if (platform != null)
         {
