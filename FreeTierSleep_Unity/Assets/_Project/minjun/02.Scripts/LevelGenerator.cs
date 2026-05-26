@@ -58,10 +58,10 @@ public class LevelGenerator : MonoBehaviour
 
     private void SpawnNextPlatform()
     {
-        // 난이도 조절: 고도가 높아질수록 발판 사이의 Y축 거리가 멀어짐
+        // 난이도 조절: 고도가 높아질수록 발판 사이의 Y축 거리가 멀어짐 (최대 5f까지 증가)
         float progressRatio = Mathf.Clamp01(player.position.y / targetAltitude);
-        float currentMinY = Mathf.Lerp(2.0f, 2.8f, progressRatio);
-        float currentMaxY = Mathf.Lerp(3.5f, 4.8f, progressRatio);
+        float currentMinY = Mathf.Lerp(2.0f, 3.5f, progressRatio);
+        float currentMaxY = Mathf.Lerp(3.5f, 5.0f, progressRatio);
 
         // 기획서 문제점 1 해결: 이전 발판(lastPlatformPos) 기준으로 타이트한 난수 적용
         float randomXOffset = Random.Range(-4f, 4f);
@@ -90,17 +90,32 @@ public class LevelGenerator : MonoBehaviour
 
     private void DespawnOldPlatforms()
     {
-        if (activePlatforms.Count == 0) return;
-
         // 카메라 하단 경계 계산 (여유분 2f 추가)
         float cameraBottomY = mainCamera.transform.position.y - mainCamera.orthographicSize - 2f;
 
-        // 큐의 가장 오래된 발판이 카메라 하단보다 아래에 있는지 확인
-        GameObject oldestPlatform = activePlatforms.Peek();
-        if (oldestPlatform != null && oldestPlatform.transform.position.y < cameraBottomY)
+        // while 루프를 통해 한 프레임에 여러 개의 발판을 동시에 수거 가능하도록 처리
+        while (activePlatforms.Count > 0)
         {
-            activePlatforms.Dequeue();
-            ObjectPooler.Instance.ReturnToPool("Platform", oldestPlatform);
+            GameObject oldestPlatform = activePlatforms.Peek();
+
+            // 데드락 방지: 발판이 다른 스크립트(예: 시한부 팝업)에 의해 이미 파괴되거나 null이 된 경우
+            if (oldestPlatform == null)
+            {
+                activePlatforms.Dequeue();
+                continue;
+            }
+
+            // 큐의 가장 오래된 발판이 카메라 하단보다 아래에 있는지 확인
+            if (oldestPlatform.transform.position.y < cameraBottomY)
+            {
+                activePlatforms.Dequeue();
+                ObjectPooler.Instance.ReturnToPool("Platform", oldestPlatform);
+            }
+            else
+            {
+                // 가장 오래된 발판이 아직 화면 안에 있다면 루프 종료 (나머지도 화면 안에 있음)
+                break;
+            }
         }
     }
 }
