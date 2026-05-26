@@ -9,6 +9,8 @@ public class PlayerController : MonoBehaviour
     
     [Header("Jump Settings")]
     public float jumpForce = 12f;
+    public float fallMultiplier = 2.5f;      // 낙하 시 중력 배수
+    public float lowJumpMultiplier = 2f;    // 점프 키를 살짝 눌렀을 때 중력 배수
     public int maxJumps = 2;
     public float coyoteTime = 0.15f;
     
@@ -60,13 +62,13 @@ public class PlayerController : MonoBehaviour
     {
         CheckGround();
         HandleCoyoteTime();
-        HandleVariableJump();
         UpdateAnimations();
     }
 
     private void FixedUpdate()
     {
         ApplyMovement();
+        ApplyBetterJump();
     }
 
     public void OnMove(InputValue value)
@@ -99,14 +101,17 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void HandleVariableJump()
+    private void ApplyBetterJump()
     {
-        if (jumpAction != null && jumpAction.WasReleasedThisFrame())
+        if (rb.linearVelocity.y < 0)
         {
-            if (rb.linearVelocity.y > 0)
-            {
-                rb.linearVelocity = new Vector2(rb.linearVelocity.x, rb.linearVelocity.y * 0.3f);
-            }
+            // 떨어질 때 더 빨리 떨어지게 함
+            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.fixedDeltaTime;
+        }
+        else if (rb.linearVelocity.y > 0 && (jumpAction != null && !jumpAction.IsPressed()))
+        {
+            // 점프 키를 뗐을 때 상승 속도를 더 빠르게 줄임
+            rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.fixedDeltaTime;
         }
     }
 
@@ -163,8 +168,9 @@ public class PlayerController : MonoBehaviour
                 Debug.Log("Ground Jump!");
             }
 
-            // 점프 힘 적용 (상승 속도 즉시 갱신)
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            // 점프 힘 적용 (상승 속도 즉시 갱신을 위해 Y속도 초기화 후 AddForce)
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0);
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             
             // 점프 직후 코요테 타임 종료
             coyoteTimer = 0;
