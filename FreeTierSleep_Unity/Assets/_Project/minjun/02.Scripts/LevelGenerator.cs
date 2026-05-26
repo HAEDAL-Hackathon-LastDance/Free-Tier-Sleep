@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class LevelGenerator : MonoBehaviour
 {
     [Header("References")]
     public Transform player;
+    public Camera mainCamera;
     
     [Header("Generation Settings")]
     public float targetAltitude = 1000f; // 최종 목표 고도
@@ -13,9 +15,14 @@ public class LevelGenerator : MonoBehaviour
 
     private Vector2 lastPlatformPos;
     private bool isLevelComplete = false;
+    
+    // 활성화된 발판을 추적하여 카메라 아래로 가면 회수하기 위한 큐
+    private Queue<GameObject> activePlatforms = new Queue<GameObject>();
 
     void Start()
     {
+        if (mainCamera == null) mainCamera = Camera.main;
+
         // 초기 시작 발판 위치 설정 (플레이어 시작 위치 근처)
         lastPlatformPos = new Vector2(0f, -2f);
         
@@ -44,13 +51,21 @@ public class LevelGenerator : MonoBehaviour
         {
             SpawnNextPlatform();
         }
+
+        // 카메라 아래로 지나친 발판 회수 (메모리 최적화)
+        DespawnOldPlatforms();
     }
 
     private void SpawnNextPlatform()
     {
+        // 난이도 조절: 고도가 높아질수록 발판 사이의 Y축 거리가 멀어짐
+        float progressRatio = Mathf.Clamp01(player.position.y / targetAltitude);
+        float currentMinY = Mathf.Lerp(2.0f, 2.8f, progressRatio);
+        float currentMaxY = Mathf.Lerp(3.5f, 4.8f, progressRatio);
+
         // 기획서 문제점 1 해결: 이전 발판(lastPlatformPos) 기준으로 타이트한 난수 적용
         float randomXOffset = Random.Range(-4f, 4f);
-        float randomYOffset = Random.Range(2f, 3.5f);
+        float randomYOffset = Random.Range(currentMinY, currentMaxY);
 
         float nextX = lastPlatformPos.x + randomXOffset;
         float nextY = lastPlatformPos.y + randomYOffset;
@@ -60,13 +75,32 @@ public class LevelGenerator : MonoBehaviour
 
         lastPlatformPos = new Vector2(nextX, nextY);
 
-        // ObjectPooler를 이용해 발판 스폰 (태그는 "Platform"으로 가정)
-        // 팝업창 발판 프리팹이 풀에 등록되어 있어야 합니다.
+        // ObjectPooler를 이용해 발판 스폰
         GameObject platform = ObjectPooler.Instance.SpawnFromPool("Platform", lastPlatformPos, Quaternion.identity);
         
-        if (platform == null)
+        if (platform != null)
+        {
+            activePlatforms.Enqueue(platform);
+        }
+        else
         {
             Debug.LogWarning("Platform 스폰 실패. ObjectPooler 설정을 확인하세요.");
+        }
+    }
+
+    private void DespawnOldPlatforms()
+    {
+        if (activePlatforms.Count == 0) return;
+
+        // 카메라 하단 경계 계산 (여유분 2f 추가)
+        float cameraBottomY = mainCamera.transform.position.y - mainCamera.orthographicSize - 2f;
+
+        // 큐의 가장 오래된 발판이 카메라 하단보다 아래에 있는지 확인
+        GameObject oldestPlatform = activePlatforms.Peek();
+        if (oldestPlatform != null && oldestPlatform.transform.position.y < cameraBottomY)
+        {
+            activePlatforms.Dequeue();
+            ObjectPooler.Instance.ReturnToPool("Platform", oldestPlatform);
         }
     }
 }
