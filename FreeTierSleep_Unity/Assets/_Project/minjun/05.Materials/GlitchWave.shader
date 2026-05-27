@@ -79,6 +79,7 @@ Shader "Custom/GlitchWave"
                 float colId = floor(columns);
                 
                 // 2. 기둥마다 상승 속도와 시작 위치(Offset)를 다르게 설정
+                // 여기서 _EffectSpeed를 사용하여 시각적 스크롤 속도를 결정합니다.
                 float colSpeed = _EffectSpeed * (0.5 + 0.5 * random(float2(colId, 0.0)));
                 float colOffset = random(float2(colId, 1.0)) * 100.0;
                 
@@ -101,7 +102,6 @@ Shader "Custom/GlitchWave"
                 float charBrightness = random(cellId + float2(0.0, _Time.y * 0.1));
                 
                 // 7. 꼬리(Trail) 효과: 기둥의 특정 길이만큼 그라데이션으로 사라짐
-                // frac(rows * 0.05)를 사용하여 긴 꼬리를 만듦
                 float trail = frac(rows * 0.05);
                 trail = smoothstep(0.1, 0.9, trail); // 부드러운 페이드 아웃
                 

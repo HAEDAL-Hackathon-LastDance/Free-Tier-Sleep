@@ -15,7 +15,7 @@ public class RisingDataFlood : MonoBehaviour
     {
         if (!isMoving) return;
 
-        // 매 프레임 위로 이동
+        // 매 프레임 위로 이동 (물리적인 오브젝트의 이동)
         transform.Translate(Vector3.up * riseSpeed * Time.deltaTime);
 
         // 최대 높이에 도달하면 이동 정지
