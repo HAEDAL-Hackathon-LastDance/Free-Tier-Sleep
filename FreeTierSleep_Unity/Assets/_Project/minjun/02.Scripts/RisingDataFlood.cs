@@ -24,7 +24,8 @@ public class RisingDataFlood : MonoBehaviour
         col = GetComponent<Collider2D>();
     }
 
-    void Update()
+    // Update 대신 LateUpdate를 사용하여 카메라 이동이 끝난 후 위치를 맞춥니다.
+    void LateUpdate()
     {
         if (!isMoving) return;
 
@@ -39,7 +40,7 @@ public class RisingDataFlood : MonoBehaviour
             // 이번 프레임에 이동할 거리가 카메라 바닥을 넘어서는 경우
             if (glitchBottomY + moveStep >= cameraBottomY)
             {
-                // 글리치의 바닥을 카메라의 바닥에 정확히 맞춤 (오차 및 여백 완벽 보정)
+                // 글리치의 바닥을 카메라의 최종 바닥 위치에 정확히 맞춤 (오차 및 여백 완벽 보정)
                 float distanceToMove = cameraBottomY - glitchBottomY;
                 transform.Translate(Vector3.up * distanceToMove);
                 return;
