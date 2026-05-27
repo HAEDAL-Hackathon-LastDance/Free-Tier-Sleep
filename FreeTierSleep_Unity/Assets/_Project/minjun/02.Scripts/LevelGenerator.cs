@@ -6,6 +6,7 @@ public class LevelGenerator : MonoBehaviour
     [Header("References")]
     public Transform cameraTransform;
     public Camera mainCamera;
+    public RisingDataFlood dataFlood; // 글리치(DataFlood) 참조 추가
     
     [Header("Generation Settings")]
     public float targetAltitude = 1000f; // 최종 목표 고도
@@ -48,7 +49,7 @@ public class LevelGenerator : MonoBehaviour
             SpawnNextPlatform();
         }
 
-        // 카메라 아래로 지나친 발판 자동 회수 (메모리 최적화)
+        // 카메라 아래 또는 글리치 아래로 지나친 발판 자동 회수
         DespawnOldPlatforms();
     }
 
@@ -92,6 +93,12 @@ public class LevelGenerator : MonoBehaviour
     {
         // 카메라 하단 경계 계산 (여유 공간 적용)
         float cameraBottomY = mainCamera.transform.position.y - mainCamera.orthographicSize - despawnMarginY;
+        
+        // 글리치(DataFlood) 최하단 기준 계산 (dataFlood가 할당되어 있다면)
+        float floodBottomY = dataFlood != null ? dataFlood.CurrentY : float.MinValue;
+
+        // 둘 중 더 높은 값을 디스폰 기준으로 사용 (글리치에 잠기거나 카메라에서 너무 멀어지면 디스폰)
+        float despawnThresholdY = Mathf.Max(cameraBottomY, floodBottomY);
 
         while (activePlatforms.Count > 0)
         {
@@ -104,8 +111,8 @@ public class LevelGenerator : MonoBehaviour
                 continue;
             }
 
-            // 화면 아래로 완전히 벗어난 발판만 쏙 빼서 풀로 재반환
-            if (oldestPlatform.transform.position.y < cameraBottomY)
+            // 화면 아래 또는 글리치 아래로 완전히 벗어난 발판만 쏙 빼서 풀로 재반환
+            if (oldestPlatform.transform.position.y < despawnThresholdY)
             {
                 activePlatforms.Dequeue();
                 ObjectPooler.Instance.ReturnToPool("Platform", oldestPlatform);

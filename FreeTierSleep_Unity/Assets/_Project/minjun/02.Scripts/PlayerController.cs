@@ -204,9 +204,10 @@ public class PlayerController : MonoBehaviour
         rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
     }
 
-    public void TakeDamage()
+    // 데미지를 실제로 입었는지 여부를 반환하도록 수정 (이벤트 중복 호출 방지)
+    public bool TakeDamage()
     {
-        if (isDead || isInvincible) return;
+        if (isDead || isInvincible) return false;
 
         currentHp--;
         Debug.Log($"Player took damage! Current HP: {currentHp}");
@@ -219,6 +220,8 @@ public class PlayerController : MonoBehaviour
         {
             StartCoroutine(InvincibilityRoutine());
         }
+        
+        return true;
     }
 
     private IEnumerator InvincibilityRoutine()
@@ -252,7 +255,10 @@ public class PlayerController : MonoBehaviour
         if (isDead) return;
         isDead = true;
 
-        // 1. 색상 어둡게 변경
+        // 진행 중인 무적 깜빡임 코루틴 강제 종료 (스프라이트가 꺼진 채로 죽는 버그 방지)
+        StopAllCoroutines();
+
+        // 1. 색상 어둡게 변경 및 스프라이트 확실히 켜기
         if (spriteRenderer != null)
         {
             spriteRenderer.enabled = true;

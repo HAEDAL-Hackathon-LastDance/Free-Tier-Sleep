@@ -27,12 +27,13 @@ public class InstantKill : MonoBehaviour
             PlayerController playerController = other.GetComponent<PlayerController>();
             if (playerController != null)
             {
-                // TakeDamage 내부에서 무적 상태를 체크하므로 연속 호출되어도 안전함
-                playerController.TakeDamage();
+                // TakeDamage가 true를 반환했을 때(실제로 데미지를 입었을 때)만 이벤트 실행
+                // 무적 상태일 때는 false를 반환하므로 이벤트가 중복 실행되지 않음
+                if (playerController.TakeDamage())
+                {
+                    onKill?.Invoke();
+                }
             }
-            
-            // 등록된 외부 이벤트 실행
-            onKill?.Invoke();
         }
     }
 }
