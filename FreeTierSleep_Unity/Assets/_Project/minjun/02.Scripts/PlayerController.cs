@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections;
+using System;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
@@ -9,6 +10,9 @@ public class PlayerController : MonoBehaviour
     public int maxHp = 3;
     public int currentHp;
     private bool isInvincible = false;
+    
+    // 체력 변경 시 UI 등에 알리기 위한 이벤트
+    public Action<int> OnHealthChanged;
 
     [Header("Movement Settings")]
     public float moveSpeed = 8f;
@@ -211,6 +215,9 @@ public class PlayerController : MonoBehaviour
 
         currentHp--;
         Debug.Log($"Player took damage! Current HP: {currentHp}");
+        
+        // UI 업데이트 이벤트 호출
+        OnHealthChanged?.Invoke(currentHp);
 
         if (currentHp <= 0)
         {
