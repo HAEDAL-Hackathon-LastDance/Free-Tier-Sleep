@@ -44,6 +44,7 @@ public class PlayerController : MonoBehaviour
     private InputAction jumpAction;
     private Animator anim;
     private SpriteRenderer spriteRenderer;
+    private SpriteRenderer glitchOverlayRenderer; // 글리치 효과를 덮어씌울 자식 렌더러
     private int jumpsRemaining;
     private float coyoteTimer;
     private bool isGrounded;
@@ -80,6 +81,21 @@ public class PlayerController : MonoBehaviour
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         
         currentHp = maxHp;
+
+        // 플레이어 원본 이미지를 유지하면서 위에 글리치를 띄우기 위한 자식 오브젝트 생성
+        if (glitchMaterial != null && spriteRenderer != null)
+        {
+            GameObject overlayObj = new GameObject("GlitchOverlay");
+            overlayObj.transform.SetParent(transform);
+            overlayObj.transform.localPosition = Vector3.zero;
+            overlayObj.transform.localScale = Vector3.one;
+
+            glitchOverlayRenderer = overlayObj.AddComponent<SpriteRenderer>();
+            glitchOverlayRenderer.material = glitchMaterial;
+            glitchOverlayRenderer.sortingLayerID = spriteRenderer.sortingLayerID;
+            glitchOverlayRenderer.sortingOrder = spriteRenderer.sortingOrder + 1; // 플레이어보다 1단계 앞에 렌더링
+            glitchOverlayRenderer.enabled = false; // 평소에는 꺼둠
+        }
     }
 
     private void Update()
@@ -128,6 +144,13 @@ public class PlayerController : MonoBehaviour
         {
             if (moveInput.x > 0) spriteRenderer.flipX = false;
             else if (moveInput.x < 0) spriteRenderer.flipX = true;
+
+            // 글리치 오버레이가 플레이어의 현재 스프라이트와 방향을 똑같이 따라가도록 동기화
+            if (glitchOverlayRenderer != null)
+            {
+                glitchOverlayRenderer.sprite = spriteRenderer.sprite;
+                glitchOverlayRenderer.flipX = spriteRenderer.flipX;
+            }
         }
     }
 
@@ -227,14 +250,14 @@ public class PlayerController : MonoBehaviour
         // UI 업데이트 이벤트 호출
         OnHealthChanged?.Invoke(currentHp);
 
-        // 피격 시 글리치 머티리얼 적용 및 오염도 증가
-        if (glitchMaterial != null && spriteRenderer != null)
+        // 피격 시 글리치 오버레이 켜기 및 오염도 설정
+        if (glitchOverlayRenderer != null)
         {
-            spriteRenderer.material = glitchMaterial;
-            float infectionRatio = 1f - ((float)currentHp / maxHp); // 잃은 체력 비율 (예: 1/3, 2/3)
-            if (spriteRenderer.material.HasProperty(glitchPropertyName))
+            glitchOverlayRenderer.enabled = true;
+            float infectionRatio = 1f - ((float)currentHp / maxHp); // 잃은 체력 비율
+            if (glitchOverlayRenderer.material.HasProperty(glitchPropertyName))
             {
-                spriteRenderer.material.SetFloat(glitchPropertyName, infectionRatio);
+                glitchOverlayRenderer.material.SetFloat(glitchPropertyName, infectionRatio);
             }
         }
 
@@ -263,6 +286,11 @@ public class PlayerController : MonoBehaviour
             if (spriteRenderer != null)
             {
                 spriteRenderer.enabled = !spriteRenderer.enabled;
+                // 오버레이도 같이 깜빡이도록 동기화
+                if (glitchOverlayRenderer != null)
+                {
+                    glitchOverlayRenderer.enabled = spriteRenderer.enabled;
+                }
             }
             yield return new WaitForSeconds(blinkInterval);
             elapsed += blinkInterval;
@@ -272,6 +300,13 @@ public class PlayerController : MonoBehaviour
         {
             spriteRenderer.enabled = true;
         }
+        
+        // 1초 뒤 무적이 끝나면 글리치 효과 끄기 (원래 플레이어 모습으로 복귀)
+        if (glitchOverlayRenderer != null)
+        {
+            glitchOverlayRenderer.enabled = false;
+        }
+        
         isInvincible = false;
     }
 
@@ -281,7 +316,7 @@ public class PlayerController : MonoBehaviour
         if (isDead) return;
         isDead = true;
 
-        // 진행 중인 무적 깜빡임 코루틴 강제 종료 (스프라이트가 꺼진 채로 죽는 버그 방지)
+        // 진행 중인 무적 깜빡임 코루틴 강제 종료
         StopAllCoroutines();
 
         // 1. 색상 어둡게 변경 및 스프라이트 확실히 켜기
@@ -290,20 +325,21 @@ public class PlayerController : MonoBehaviour
             spriteRenderer.enabled = true;
             spriteRenderer.color = Color.gray;
             
-            // 글리치 머티리얼이 할당되어 있다면 감염 연출 코루틴 시작
-            if (glitchMaterial != null)
+            // 사망 시 글리치 오버레이 켜고 감염 연출 시작
+            if (glitchOverlayRenderer != null)
             {
+                glitchOverlayRenderer.enabled = true;
                 StartCoroutine(GlitchInfectionRoutine());
             }
         }
 
-        // 2. 애니메이터 정지 (Die 애니메이션이 없을 때 다른 애니메이션 재생 방지)
+        // 2. 애니메이터 정지
         if (anim != null)
         {
             anim.enabled = false;
         }
 
-        // 3. 콜라이더 끄기 (바닥을 뚫고 떨어지도록)
+        // 3. 콜라이더 끄기
         if (col != null)
         {
             col.enabled = false;
@@ -326,12 +362,12 @@ public class PlayerController : MonoBehaviour
     // 점진적으로 감염되는 글리치 연출 코루틴
     private IEnumerator GlitchInfectionRoutine()
     {
-        spriteRenderer.material = glitchMaterial;
-        
+        if (glitchOverlayRenderer == null) yield break;
+
         float startIntensity = 0f;
-        if (spriteRenderer.material.HasProperty(glitchPropertyName))
+        if (glitchOverlayRenderer.material.HasProperty(glitchPropertyName))
         {
-            startIntensity = spriteRenderer.material.GetFloat(glitchPropertyName);
+            startIntensity = glitchOverlayRenderer.material.GetFloat(glitchPropertyName);
         }
 
         float elapsed = 0f;
@@ -342,9 +378,9 @@ public class PlayerController : MonoBehaviour
             float t = elapsed / glitchDuration;
             
             // 현재 오염도에서 1(최대치)까지 서서히 증가시킴
-            if (spriteRenderer.material.HasProperty(glitchPropertyName))
+            if (glitchOverlayRenderer.material.HasProperty(glitchPropertyName))
             {
-                spriteRenderer.material.SetFloat(glitchPropertyName, Mathf.Lerp(startIntensity, 1f, t));
+                glitchOverlayRenderer.material.SetFloat(glitchPropertyName, Mathf.Lerp(startIntensity, 1f, t));
             }
             
             yield return null;
