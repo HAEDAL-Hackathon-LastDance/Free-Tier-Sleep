@@ -33,39 +33,30 @@ public class AutoSetupDangerZone : Editor
 
         if (parentSprite != null)
         {
-            childSprite.sprite = parentSprite.sprite;
             childSprite.sortingLayerID = parentSprite.sortingLayerID;
             childSprite.sortingOrder = parentSprite.sortingOrder + 1; // 부모보다 살짝 앞에 렌더링
-            childSprite.drawMode = parentSprite.drawMode;
-            
-            // 핵심: 부모의 글리치 머티리얼을 그대로 가져와서 이질감 제거
-            childSprite.material = parentSprite.sharedMaterial;
+            childSprite.drawMode = SpriteDrawMode.Simple;
 
             // 4. 크기 및 위치 조정 (하단 1/3)
-            if (parentSprite.drawMode == SpriteDrawMode.Simple)
-            {
-                // Simple 모드일 경우 Scale로 조절
-                dangerZoneObj.transform.localScale = new Vector3(1f, 1f / 3f, 1f);
-                // 피벗이 중앙(0.5)이라고 가정할 때, 하단 1/3의 중심은 로컬 좌표 -0.3333
-                dangerZoneObj.transform.localPosition = new Vector3(0f, -0.3333f, 0f);
-            }
-            else
-            {
-                // Tiled나 Sliced 모드일 경우 Size 속성으로 조절
-                dangerZoneObj.transform.localScale = Vector3.one;
-                childSprite.size = new Vector2(parentSprite.size.x, parentSprite.size.y / 3f);
-                // 피벗이 중앙이라고 가정할 때 위치 계산
-                dangerZoneObj.transform.localPosition = new Vector3(0f, -parentSprite.size.y / 3f, 0f);
-            }
+            // DangerZonePulse에서 64x64 (PPU 100) 텍스처를 생성하므로 기본 크기는 0.64 x 0.64 유닛입니다.
+            // 이를 부모의 실제 크기에 맞게 스케일링합니다.
+            float parentWidth = parentSprite.bounds.size.x / dataFlood.transform.lossyScale.x;
+            float parentHeight = parentSprite.bounds.size.y / dataFlood.transform.lossyScale.y;
+            
+            float targetWidth = parentWidth;
+            float targetHeight = parentHeight / 3f;
+
+            dangerZoneObj.transform.localScale = new Vector3(targetWidth / 0.64f, targetHeight / 0.64f, 1f);
+            
+            // 피벗이 중앙이라고 가정할 때 하단 1/3 위치로 이동
+            dangerZoneObj.transform.localPosition = new Vector3(0f, -parentHeight / 3f, 0f);
         }
         else
         {
-            Debug.LogWarning("RisingDataFlood에 SpriteRenderer가 없습니다. 수동으로 이미지와 크기를 설정해 주세요.");
-            dangerZoneObj.transform.localScale = new Vector3(1f, 1f / 3f, 1f);
-            dangerZoneObj.transform.localPosition = new Vector3(0f, -0.3333f, 0f);
+            Debug.LogWarning("RisingDataFlood에 SpriteRenderer가 없습니다. 수동으로 크기를 설정해 주세요.");
         }
 
-        // 5. 경고등 깜빡임 및 떨림 효과 스크립트 부착
+        // 5. 다채로운 가로줄 글리치 생성 스크립트 부착
         dangerZoneObj.AddComponent<DangerZonePulse>();
 
         // 변경 사항 저장 처리
