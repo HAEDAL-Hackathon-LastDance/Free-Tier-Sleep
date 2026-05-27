@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -19,10 +20,14 @@ public class LevelGenerator : MonoBehaviour
     private bool isLevelComplete = false;
     private Queue<GameObject> activePlatforms = new Queue<GameObject>();
 
-    void Start()
+    // Start를 코루틴으로 변경하여 ObjectPooler 초기화를 기다림
+    IEnumerator Start()
     {
         if (mainCamera == null) mainCamera = Camera.main;
         lastPlatformPos = new Vector2(0f, -2f);
+        
+        // ObjectPooler의 Start()가 먼저 실행되어 풀이 준비될 수 있도록 한 프레임 대기
+        yield return null;
         
         // 시작 시 기본 발판 5개 미리 생성
         for (int i = 0; i < 5; i++)
