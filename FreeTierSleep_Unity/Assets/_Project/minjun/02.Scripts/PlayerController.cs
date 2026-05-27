@@ -29,6 +29,14 @@ public class PlayerController : MonoBehaviour
     public Vector2 groundCheckSize = new Vector2(0.8f, 0.1f);
     public float groundCheckDistance = 0.1f; // 발바닥으로부터 아래로 체크할 거리
 
+    [Header("Glitch Effect Settings")]
+    [Tooltip("사망 시 교체될 글리치 머티리얼")]
+    public Material glitchMaterial;
+    [Tooltip("글리치 셰이더에서 강도를 조절하는 프로퍼티 이름 (예: _Intensity, _Fade 등)")]
+    public string glitchPropertyName = "_Intensity";
+    [Tooltip("감염 연출이 진행되는 시간")]
+    public float glitchDuration = 1.5f;
+
     // 내부 상태 변수
     private Rigidbody2D rb;
     private BoxCollider2D col;
@@ -270,6 +278,12 @@ public class PlayerController : MonoBehaviour
         {
             spriteRenderer.enabled = true;
             spriteRenderer.color = Color.gray;
+            
+            // 글리치 머티리얼이 할당되어 있다면 감염 연출 코루틴 시작
+            if (glitchMaterial != null)
+            {
+                StartCoroutine(GlitchInfectionRoutine());
+            }
         }
 
         // 2. 애니메이터 정지 (Die 애니메이션이 없을 때 다른 애니메이션 재생 방지)
@@ -295,6 +309,30 @@ public class PlayerController : MonoBehaviour
         if (playerInput != null)
         {
             playerInput.enabled = false;
+        }
+    }
+
+    // 점진적으로 감염되는 글리치 연출 코루틴
+    private IEnumerator GlitchInfectionRoutine()
+    {
+        // 머티리얼을 글리치 머티리얼로 교체
+        spriteRenderer.material = glitchMaterial;
+        
+        float elapsed = 0f;
+        
+        while (elapsed < glitchDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / glitchDuration;
+            
+            // 셰이더의 프로퍼티 값을 0에서 1로 서서히 증가시킴
+            // (셰이더에 따라 최대값이 다를 수 있으므로 필요시 1f를 다른 값으로 수정)
+            if (spriteRenderer.material.HasProperty(glitchPropertyName))
+            {
+                spriteRenderer.material.SetFloat(glitchPropertyName, Mathf.Lerp(0f, 1f, t));
+            }
+            
+            yield return null;
         }
     }
 
