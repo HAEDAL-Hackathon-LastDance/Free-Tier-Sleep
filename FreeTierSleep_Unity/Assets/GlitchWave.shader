@@ -37,7 +37,7 @@ Shader "Custom/GlitchWave"
             float _ColorDrift;
             float _Speed;
 
-            // °£´ÜÇÑ ³­¼ö »ý¼º ÇÔ¼ö
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½
             float random(float2 st)
             {
                 return frac(sin(dot(st.xy, float2(12.9898,78.233))) * 43758.5453123);
@@ -55,23 +55,23 @@ Shader "Custom/GlitchWave"
             {
                 float2 uv = i.uv;
                 
-                // ½Ã°£¿¡ µû¸¥ ºÒ±ÔÄ¢ÇÑ ÆÄµµ(Wave) »ý¼º
+                // ï¿½Ã°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ò±ï¿½Ä¢ï¿½ï¿½ ï¿½Äµï¿½(Wave) ï¿½ï¿½ï¿½ï¿½
                 float time = _Time.y * _Speed;
                 float wave = sin(time + uv.y * 20.0) * cos(time * 0.5 + uv.y * 10.0);
                 
-                // ³ëÀÌÁî¸¦ ¼¯¾î ¶Ò¶Ò ²÷±â´Â ±Û¸®Ä¡ ´À³¦ Ãß°¡
+                // ï¿½ï¿½ï¿½ï¿½ï¿½î¸¦ ï¿½ï¿½ï¿½ï¿½ ï¿½Ò¶ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Û¸ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
                 float noise = random(float2(floor(uv.y * 10.0), floor(time * 5.0)));
                 float distortion = wave * noise * _GlitchIntensity;
 
-                // UV °¡·Î ¿Ö°î Àû¿ë
+                // UV ï¿½ï¿½ï¿½ï¿½ ï¿½Ö°ï¿½ ï¿½ï¿½ï¿½ï¿½
                 float2 distortedUV = uv + float2(distortion, 0);
 
-                // RGB »ö»ó ºÐ¸® (Chromatic Aberration)
+                // RGB ï¿½ï¿½ï¿½ï¿½ ï¿½Ð¸ï¿½ (Chromatic Aberration)
                 fixed4 colR = tex2D(_MainTex, distortedUV + float2(_ColorDrift * noise, 0));
                 fixed4 colG = tex2D(_MainTex, distortedUV);
                 fixed4 colB = tex2D(_MainTex, distortedUV - float2(_ColorDrift * noise, 0));
 
-                // ÃÖÁ¾ »ö»ó Á¶ÇÕ (¾ËÆÄ°ªÀº ¿øº» GÃ¤³Î ±âÁØ)
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½Ä°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ GÃ¤ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
                 return fixed4(colR.r, colG.g, colB.b, colG.a);
             }
             ENDCG
