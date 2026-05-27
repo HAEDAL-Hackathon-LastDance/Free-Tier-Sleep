@@ -2,14 +2,10 @@ Shader "Custom/GlitchWave"
 {
     Properties
     {
-        _MainTex ("Texture", 2D) = "white" {}
-        _BaseColor ("Base Color", Color) = (1, 0.1, 0.1, 0.9)
-        _GlitchIntensity ("Glitch Intensity", Range(0, 1.0)) = 0.1
-        _ColorDrift ("Color Drift", Range(0, 0.5)) = 0.05
-        _Speed ("Wave Speed", Range(0, 50)) = 5.0
-        _GridSize ("Grid Size (Pixelation)", Float) = 64.0
-        _ScanlineDensity ("Scanline Density", Float) = 300.0
-        _ScanlineSpeed ("Scanline Speed", Float) = 20.0
+        _BaseColor ("Base Color", Color) = (1.0, 0.1, 0.1, 1.0) // 붉은색
+        _Speed ("Rise Speed", Range(0, 50)) = 10.0
+        _GridSize ("Grid Density", Float) = 40.0
+        _Brightness ("Brightness", Range(0, 5)) = 1.5
     }
     SubShader
     {
@@ -36,19 +32,30 @@ Shader "Custom/GlitchWave"
                 float4 vertex : SV_POSITION;
             };
 
-            sampler2D _MainTex;
             float4 _BaseColor;
-            float _GlitchIntensity;
-            float _ColorDrift;
             float _Speed;
             float _GridSize;
-            float _ScanlineDensity;
-            float _ScanlineSpeed;
+            float _Brightness;
 
-            // 랜덤 노이즈 생성 함수
+            // 2D 랜덤 함수
             float random(float2 st)
             {
-                return frac(sin(dot(st.xy, float2(12.9898,78.233))) * 43758.5453123);
+                return frac(sin(dot(st.xy, float2(12.9898, 78.233))) * 43758.5453123);
+            }
+
+            // 가짜 문자(숫자/알파벳 느낌)를 생성하는 함수
+            float fakeCharacter(float2 cellId, float2 innerUV)
+            {
+                // 셀 내부를 3x5 픽셀 그리드로 쪼개어 문자 형태를 흉내냄
+                float2 subGrid = floor(innerUV * float2(3.0, 5.0));
+                
+                // 각 서브 픽셀마다 랜덤 값을 주어 켜거나 끔 (0.5 기준)
+                float pixelRand = random(cellId + subGrid * 0.137);
+                
+                // 테두리 부분은 약간 비워두어 글자 간격을 만듦
+                float margin = step(0.1, innerUV.x) * step(innerUV.x, 0.9) * step(0.1, innerUV.y) * step(innerUV.y, 0.9);
+                
+                return step(0.5, pixelRand) * margin;
             }
 
             v2f vert (appdata v)
@@ -63,35 +70,41 @@ Shader "Custom/GlitchWave"
             {
                 float2 uv = i.uv;
                 
-                // 1. UV 픽셀화 (Blocky Noise)
-                float2 blockyUV = floor(uv * _GridSize) / _GridSize;
+                // 1. 화면을 세로 기둥(Column)으로 나눔
+                float columns = uv.x * _GridSize;
+                float colId = floor(columns);
                 
-                // 2. 수직 스크롤 시간 적용
-                float time = _Time.y * _Speed;
+                // 2. 기둥마다 상승 속도와 시작 위치(Offset)를 다르게 설정
+                float colSpeed = _Speed * (0.5 + 0.5 * random(float2(colId, 0.0)));
+                float colOffset = random(float2(colId, 1.0)) * 100.0;
                 
-                // 3. 픽셀화된 UV와 시간을 기반으로 노이즈 생성
-                float noise = random(blockyUV + float2(0, floor(time)));
+                // 3. 위로 솟구치는 행(Row) 계산
+                // uv.y에 시간을 빼주면 위로 올라가는 효과가 생김
+                float rows = uv.y * _GridSize - _Time.y * colSpeed + colOffset;
+                float rowId = floor(rows);
                 
-                // 4. 글리치 임계값 적용 (노이즈가 특정 수치 이상일 때만 가로로 찢어짐)
-                float glitchOffset = 0.0;
-                if (noise > 0.8) 
-                {
-                    glitchOffset = (noise - 0.8) * _GlitchIntensity;
-                }
-
-                // UV 좌표 왜곡 적용
-                float2 distortedUV = uv + float2(glitchOffset, 0);
-
-                // 5. 색수차(Chromatic Aberration) 강화
-                fixed4 colR = tex2D(_MainTex, distortedUV + float2(_ColorDrift * noise, 0));
-                fixed4 colG = tex2D(_MainTex, distortedUV);
-                fixed4 colB = tex2D(_MainTex, distortedUV - float2(_ColorDrift * noise, 0));
-
-                // 6. 스캔라인 효과 (가로줄) - Properties로 빼서 해상도 대응
-                float scanline = sin(uv.y * _ScanlineDensity - _Time.y * _ScanlineSpeed) * 0.1 + 0.9;
-
-                // 최종 색상 조합 (글리치 효과 + 붉은색 베이스 컬러 + 스캔라인)
-                return fixed4(colR.r, colG.g, colB.b, colG.a) * _BaseColor * scanline;
+                float2 cellId = float2(colId, rowId);
+                float2 innerUV = frac(float2(columns, rows));
+                
+                // 4. 가짜 문자 형태 생성
+                float charShape = fakeCharacter(cellId, innerUV);
+                
+                // 5. 문자의 밝기 랜덤화 (깜빡이는 느낌)
+                float charBrightness = random(cellId + float2(0.0, _Time.y * 0.1));
+                
+                // 6. 꼬리(Trail) 효과: 기둥의 특정 길이만큼 그라데이션으로 사라짐
+                // frac(rows * 0.05)를 사용하여 긴 꼬리를 만듦
+                float trail = frac(rows * 0.05);
+                trail = smoothstep(0.1, 0.9, trail); // 부드러운 페이드 아웃
+                
+                // 7. 최종 강도 계산 (문자 형태 * 밝기 * 꼬리)
+                float finalIntensity = charShape * charBrightness * trail * _Brightness;
+                
+                // 8. 붉은색 적용 및 알파 블렌딩
+                fixed4 finalColor = _BaseColor * finalIntensity;
+                finalColor.a = finalIntensity; // 검은 부분은 투명하게 처리
+                
+                return finalColor;
             }
             ENDCG
         }
