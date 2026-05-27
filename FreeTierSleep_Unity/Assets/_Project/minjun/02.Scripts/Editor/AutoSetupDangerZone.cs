@@ -37,9 +37,9 @@ public class AutoSetupDangerZone : Editor
             childSprite.sortingLayerID = parentSprite.sortingLayerID;
             childSprite.sortingOrder = parentSprite.sortingOrder + 1; // 부모보다 살짝 앞에 렌더링
             childSprite.drawMode = parentSprite.drawMode;
-
-            // 검붉은색 (Dark Red) + 반투명 설정
-            childSprite.color = new Color(0.6f, 0f, 0f, 0.7f);
+            
+            // 핵심: 부모의 글리치 머티리얼을 그대로 가져와서 이질감 제거 (같이 일렁이게 됨)
+            childSprite.material = parentSprite.sharedMaterial;
 
             // 4. 크기 및 위치 조정 (하단 1/3)
             if (parentSprite.drawMode == SpriteDrawMode.Simple)
@@ -64,6 +64,9 @@ public class AutoSetupDangerZone : Editor
             dangerZoneObj.transform.localScale = new Vector3(1f, 1f / 3f, 1f);
             dangerZoneObj.transform.localPosition = new Vector3(0f, -0.3333f, 0f);
         }
+
+        // 5. 경고등 깜빡임 효과 스크립트 부착
+        dangerZoneObj.AddComponent<DangerZonePulse>();
 
         // 변경 사항 저장 처리
         EditorUtility.SetDirty(dataFlood.gameObject);
