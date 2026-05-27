@@ -30,22 +30,27 @@ public class PlatformTimer : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        TryTriggerTimer(collision.gameObject);
+        TryTriggerTimer(collision);
     }
 
     // 플레이어가 발판 위에 머물고 있을 때도 체크하여 확실하게 작동하도록 보장
     private void OnCollisionStay2D(Collision2D collision)
     {
-        TryTriggerTimer(collision.gameObject);
+        TryTriggerTimer(collision);
     }
 
-    private void TryTriggerTimer(GameObject obj)
+    private void TryTriggerTimer(Collision2D collision)
     {
-        // 플레이어와 충돌했고, 아직 트리거되지 않았다면 타이머 시작
-        if (!isTriggered && obj.CompareTag("Player"))
+        // 플레이어와 충돌했고, 아직 트리거되지 않았다면
+        if (!isTriggered && collision.gameObject.CompareTag("Player"))
         {
-            isTriggered = true;
-            StartCoroutine(DecayRoutine());
+            // 충돌 지점의 법선(Normal) 벡터를 확인하여 위에서 아래로 밟았는지 체크
+            // normal.y가 음수(-0.5 이하)라는 것은 플레이어가 발판의 상단면을 밟았음을 의미합니다.
+            if (collision.contacts.Length > 0 && collision.contacts[0].normal.y < -0.5f)
+            {
+                isTriggered = true;
+                StartCoroutine(DecayRoutine());
+            }
         }
     }
 
