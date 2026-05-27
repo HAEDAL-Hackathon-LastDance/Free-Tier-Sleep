@@ -1324,6 +1324,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 495980211734834995, guid: 9a3d2e6111eb91a4baf168f50c18ffe3, type: 3}
+      propertyPath: m_Size.y
+      value: 1.5840584
+      objectReference: {fileID: 0}
+    - target: {fileID: 495980211734834995, guid: 9a3d2e6111eb91a4baf168f50c18ffe3, type: 3}
+      propertyPath: m_Offset.y
+      value: 0.2115795
+      objectReference: {fileID: 0}
     - target: {fileID: 1425685249764716047, guid: 9a3d2e6111eb91a4baf168f50c18ffe3, type: 3}
       propertyPath: m_Name
       value: Player
