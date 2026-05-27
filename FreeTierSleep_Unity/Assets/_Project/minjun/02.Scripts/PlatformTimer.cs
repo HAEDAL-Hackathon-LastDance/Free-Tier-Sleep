@@ -33,8 +33,13 @@ public class PlatformTimer : MonoBehaviour
         // 플레이어가 밟았고, 아직 트리거되지 않았다면 타이머 시작
         if (!isTriggered && collision.gameObject.CompareTag("Player"))
         {
-            isTriggered = true;
-            StartCoroutine(DecayRoutine());
+            // 플레이어가 발판 위에서 아래로 떨어지며 밟았는지(발이 닿았는지) 확인
+            // 플레이어의 중심 Y좌표가 발판의 중심 Y좌표보다 높을 때만 인정
+            if (collision.transform.position.y > transform.position.y)
+            {
+                isTriggered = true;
+                StartCoroutine(DecayRoutine());
+            }
         }
     }
 
@@ -57,6 +62,16 @@ public class PlatformTimer : MonoBehaviour
         // 1.5초 동안 붉은색과 원래 색을 깜빡임
         while (elapsed < duration)
         {
+            // 시간이 지날수록 깜빡이는 속도가 빨라지도록 연출 (긴장감 부여)
+            if (elapsed > 1.0f) 
+            {
+                blinkInterval = 0.05f; // 매우 빠름
+            }
+            else if (elapsed > 0.5f) 
+            {
+                blinkInterval = 0.1f;  // 중간 빠름
+            }
+
             spriteRenderer.color = isRed ? Color.white : Color.red;
             isRed = !isRed;
             
@@ -64,7 +79,7 @@ public class PlatformTimer : MonoBehaviour
             elapsed += blinkInterval;
         }
 
-        // 시간이 다 되면 풀로 반환
+        // 시간이 다 되면 풀로 반환 (파괴되어 플레이어가 떨어짐)
         ObjectPooler.Instance.ReturnToPool("Platform", gameObject);
     }
 }
