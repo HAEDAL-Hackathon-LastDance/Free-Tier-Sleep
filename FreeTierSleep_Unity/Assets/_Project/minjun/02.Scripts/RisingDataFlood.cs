@@ -11,6 +11,9 @@ public class RisingDataFlood : MonoBehaviour
 
     private bool isMoving = true;
 
+    // 외부(LevelGenerator 등)에서 현재 파도의 Y 위치를 가져갈 수 있도록 프로퍼티 추가
+    public float CurrentY => transform.position.y;
+
     void Update()
     {
         if (!isMoving) return;

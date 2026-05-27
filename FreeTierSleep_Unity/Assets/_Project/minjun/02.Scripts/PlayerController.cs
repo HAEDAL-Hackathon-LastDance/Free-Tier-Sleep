@@ -1,9 +1,15 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class PlayerController : MonoBehaviour
 {
+    [Header("Health Settings")]
+    public int maxHp = 3;
+    public int currentHp;
+    private bool isInvincible = false;
+
     [Header("Movement Settings")]
     public float moveSpeed = 8f;
     
@@ -41,6 +47,7 @@ public class PlayerController : MonoBehaviour
         groundCheckSize = new Vector2(0.8f, 0.1f);
         moveSpeed = 8f;
         jumpForce = 12f;
+        maxHp = 3;
     }
 
     private void Awake()
@@ -59,6 +66,8 @@ public class PlayerController : MonoBehaviour
 
         rb.freezeRotation = true;
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+        
+        currentHp = maxHp;
     }
 
     private void Update()
@@ -195,6 +204,48 @@ public class PlayerController : MonoBehaviour
         rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
     }
 
+    public void TakeDamage()
+    {
+        if (isDead || isInvincible) return;
+
+        currentHp--;
+        Debug.Log($"Player took damage! Current HP: {currentHp}");
+
+        if (currentHp <= 0)
+        {
+            Die();
+        }
+        else
+        {
+            StartCoroutine(InvincibilityRoutine());
+        }
+    }
+
+    private IEnumerator InvincibilityRoutine()
+    {
+        isInvincible = true;
+        float duration = 1f;
+        float elapsed = 0f;
+        float blinkInterval = 0.1f;
+
+        // 1초간 깜빡임 연출
+        while (elapsed < duration)
+        {
+            if (spriteRenderer != null)
+            {
+                spriteRenderer.enabled = !spriteRenderer.enabled;
+            }
+            yield return new WaitForSeconds(blinkInterval);
+            elapsed += blinkInterval;
+        }
+
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.enabled = true;
+        }
+        isInvincible = false;
+    }
+
     // 외부(InstantKill 등)에서 호출할 수 있는 사망 처리 메서드
     public void Die()
     {
@@ -204,6 +255,7 @@ public class PlayerController : MonoBehaviour
         // 1. 색상 어둡게 변경
         if (spriteRenderer != null)
         {
+            spriteRenderer.enabled = true;
             spriteRenderer.color = Color.gray;
         }
 

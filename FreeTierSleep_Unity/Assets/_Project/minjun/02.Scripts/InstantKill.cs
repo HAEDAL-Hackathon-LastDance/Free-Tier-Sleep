@@ -5,10 +5,8 @@ using UnityEngine.Events;
 public class InstantKill : MonoBehaviour
 {
     [Header("Kill Events")]
-    [Tooltip("플레이어가 즉사했을 때 호출될 이벤트 (UI 띄우기, 사운드 재생 등)")]
+    [Tooltip("플레이어가 데미지를 입었을 때 호출될 이벤트 (UI 띄우기, 사운드 재생 등)")]
     public UnityEvent onKill;
-
-    private bool hasKilled = false;
 
     private void Awake()
     {
@@ -20,25 +18,20 @@ public class InstantKill : MonoBehaviour
         }
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    // 플레이어가 글리치 안에 머무는 동안 계속 데미지 판정을 시도하도록 OnTriggerStay2D 사용
+    private void OnTriggerStay2D(Collider2D other)
     {
-        // 중복 사망 처리 방지
-        if (hasKilled) return;
-
         // 충돌한 오브젝트가 플레이어인지 확인
         if (other.CompareTag("Player"))
         {
-            hasKilled = true;
-            Debug.Log("Player hit the Data Garbage Collector! Instant Kill.");
-            
-            // 플레이어의 Die 연출 메서드 호출
             PlayerController playerController = other.GetComponent<PlayerController>();
             if (playerController != null)
             {
-                playerController.Die();
+                // TakeDamage 내부에서 무적 상태를 체크하므로 연속 호출되어도 안전함
+                playerController.TakeDamage();
             }
             
-            // 등록된 외부 이벤트 실행 (게임 오버 매니저 호출 등)
+            // 등록된 외부 이벤트 실행
             onKill?.Invoke();
         }
     }
