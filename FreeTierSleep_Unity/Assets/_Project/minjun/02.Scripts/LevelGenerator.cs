@@ -8,7 +8,7 @@ public class LevelGenerator : MonoBehaviour
     public Transform cameraTransform;
     public Camera mainCamera;
     public RisingDataFlood dataFlood; // 글리치(DataFlood) 참조 추가
-    
+
     [Header("Generation Settings")]
     public float targetAltitude = 1000f; // 최종 목표 고도
     public float spawnYThreshold = 15f;  // 카메라 기준 위로 얼마만큼 미리 생성할지
@@ -25,10 +25,10 @@ public class LevelGenerator : MonoBehaviour
     {
         if (mainCamera == null) mainCamera = Camera.main;
         lastPlatformPos = new Vector2(0f, -2f);
-        
+
         // ObjectPooler의 Start()가 먼저 실행되어 풀이 준비될 수 있도록 한 프레임 대기
         yield return null;
-        
+
         // 시작 시 기본 발판 5개 미리 생성
         for (int i = 0; i < 5; i++)
         {
@@ -40,21 +40,17 @@ public class LevelGenerator : MonoBehaviour
     {
         if (isLevelComplete) return;
 
-        // 목표 고도에 도달했는지 체크
         if (cameraTransform.position.y >= targetAltitude)
         {
             isLevelComplete = true;
-            Debug.Log("목표 고도 도달! 클리어 컷신으로 전환 필요.");
             return;
         }
 
-        // 카메라의 Y좌표를 기준으로 발판이 부족하면 추가 생성
-        if (cameraTransform.position.y + 10f > lastPlatformPos.y)
+        // 봇의 제안 반영: 하드코딩 10f -> spawnYThreshold 변수 적용
+        if (cameraTransform.position.y + spawnYThreshold > lastPlatformPos.y)
         {
             SpawnNextPlatform();
         }
-
-        // 카메라 아래 또는 글리치 아래로 지나친 발판 자동 회수
         DespawnOldPlatforms();
     }
 
@@ -87,7 +83,7 @@ public class LevelGenerator : MonoBehaviour
         // 4. [핵심] 렉 유발하는 Instantiate 대신 기존 ObjectPooler 시스템과 완벽 연동
         GameObject platform = ObjectPooler.Instance.SpawnFromPool("Platform", new Vector2(nextX, nextY), Quaternion.identity);
         lastPlatformPos = new Vector2(nextX, nextY);
-        
+
         if (platform != null)
         {
             activePlatforms.Enqueue(platform);
@@ -96,28 +92,36 @@ public class LevelGenerator : MonoBehaviour
 
     private void DespawnOldPlatforms()
     {
-        // 카메라 하단 경계 계산 (여유 공간 적용)
-        float cameraBottomY = mainCamera.transform.position.y - mainCamera.orthographicSize - despawnMarginY;
-        
-        // 글리치(DataFlood) 최하단 기준 계산 (dataFlood가 할당되어 있다면)
-        float floodBottomY = dataFlood != null ? dataFlood.CurrentY : float.MinValue;
+        float cameraBottomY = mainCamera.transform.position.y - mainCamera.orthographicSize - 2f;
 
-        // 둘 중 더 높은 값을 디스폰 기준으로 사용 (글리치에 잠기거나 카메라에서 너무 멀어지면 디스폰)
-        float despawnThresholdY = Mathf.Max(cameraBottomY, floodBottomY);
+        // 봇의 제안 반영: 파도의 상단 살점을 정확히 계산하기 위해 Collider2D bounds 이용
+        float floodTopY = float.MinValue;
+        GameObject dataFlood = GameObject.FindWithTag("DataFlood");
+        if (dataFlood != null)
+        {
+            Collider2D floodCollider = dataFlood.GetComponent<Collider2D>();
+            if (floodCollider != null)
+            {
+                // 파도의 가장 윗면 좌표를 기준점으로 삼음
+                floodTopY = floodCollider.bounds.max.y;
+            }
+        }
+
+        // 카메라 하단과 파도 상단 중 더 높은 곳을 기준선으로 설정
+        float finalDespawnLine = Mathf.Max(cameraBottomY, floodTopY);
 
         while (activePlatforms.Count > 0)
         {
             GameObject oldestPlatform = activePlatforms.Peek();
 
-            // 이미 기믹에 의해 꺼진 발판 예외 처리
             if (oldestPlatform == null || !oldestPlatform.activeInHierarchy)
             {
                 activePlatforms.Dequeue();
                 continue;
             }
 
-            // 화면 아래 또는 글리치 아래로 완전히 벗어난 발판만 쏙 빼서 풀로 재반환
-            if (oldestPlatform.transform.position.y < despawnThresholdY)
+            // 최적화: 최종 기준선보다 아래에 있는 발판은 가차 없이 풀로 회수
+            if (oldestPlatform.transform.position.y < finalDespawnLine)
             {
                 activePlatforms.Dequeue();
                 ObjectPooler.Instance.ReturnToPool("Platform", oldestPlatform);

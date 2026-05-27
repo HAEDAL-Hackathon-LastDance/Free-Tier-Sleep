@@ -75,7 +75,9 @@ public class PlatformTimer : MonoBehaviour
         // DataFlood와 닿으면 즉시 풀로 반환
         if (other.CompareTag("DataFlood"))
         {
-            ObjectPooler.Instance.ReturnToPool("Platform", gameObject);
+            StopAllCoroutines();
+            // 발판 스크립트가 붙은 최상위 GameObject를 풀로 안전하게 반환
+            ObjectPooler.Instance.ReturnToPool("Platform", this.gameObject);
         }
     }
 
