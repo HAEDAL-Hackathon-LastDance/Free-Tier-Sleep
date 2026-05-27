@@ -13,25 +13,31 @@ public class DangerZonePulse : MonoBehaviour
     [Tooltip("깜빡이는 속도")]
     public float pulseSpeed = 12f;
 
-    [Header("Shake & Wave Settings")]
+    [Header("Shake Settings")]
     [Tooltip("떨림의 강도")]
     public float shakeAmount = 0.2f;
     
     [Tooltip("떨림의 속도")]
     public float shakeSpeed = 40f;
-    
-    [Tooltip("일렁이는 크기 변화량 (패턴이 커지는 느낌)")]
-    public float waveScaleAmount = 0.15f;
+
+    [Header("Pattern Settings")]
+    [Tooltip("패턴의 밀도/크기 조절 (1보다 작으면 패턴이 커지고 굵어짐, 1보다 크면 빼곡해짐)")]
+    public float patternScale = 0.5f;
 
     private SpriteRenderer spriteRenderer;
     private Vector3 initialLocalPos;
-    private Vector3 initialLocalScale;
 
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         initialLocalPos = transform.localPosition;
-        initialLocalScale = transform.localScale;
+
+        // DangerZone만의 패턴 크기를 조절하기 위해 머티리얼 인스턴스 접근
+        if (spriteRenderer.material != null)
+        {
+            // 텍스처 타일링을 조절하여 패턴을 굵게/크게 또는 빼곡하게 만듦
+            spriteRenderer.material.mainTextureScale = new Vector2(patternScale, patternScale);
+        }
     }
 
     private void Update()
@@ -48,10 +54,5 @@ public class DangerZonePulse : MonoBehaviour
         float shakeY = (Mathf.PerlinNoise(0f, Time.time * shakeSpeed) - 0.5f) * shakeAmount;
         
         transform.localPosition = initialLocalPos + new Vector3(shakeX, shakeY, 0f);
-
-        // 3. 크기가 커졌다 작아지며 일렁이는 효과 (패턴/글자가 커지는 느낌 연출)
-        // 깜빡임 속도의 절반 속도로 부드럽게 크기가 팽창/수축함
-        float wave = Mathf.Sin(Time.time * (pulseSpeed * 0.5f)) * waveScaleAmount;
-        transform.localScale = initialLocalScale + new Vector3(wave, wave, 0f);
     }
 }
