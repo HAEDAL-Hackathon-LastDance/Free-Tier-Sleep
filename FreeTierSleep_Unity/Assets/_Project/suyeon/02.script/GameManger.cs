@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 
 public class GameManager : MonoBehaviour
@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
     public float delayDecreaseRate = 0.2f;
     public int enemiesPerWave = 5;
 
-    // ?? 새로 추가된 여백 변수! (값이 클수록 화면에서 더 멀리서 생성됨)
+    // ⭐️ 새로 추가된 여백 변수! (값이 클수록 화면에서 더 멀리서 생성됨)
     public float spawnPadding = 2.0f;
 
     [Header("Wave Status")]
@@ -59,7 +59,7 @@ public class GameManager : MonoBehaviour
         int randomIndex = Random.Range(0, enemyPrefabs.Length);
         GameObject selectedPrefab = enemyPrefabs[randomIndex];
 
-        // ?? 유니티 카메라 오류 방지! 네가 원래 썼던 화면 크기(-10~10, -6~6)를 기준으로 화면 밖 고정!
+        // ⭐️ 유니티 카메라 오류 방지! 네가 원래 썼던 화면 크기(-10~10, -6~6)를 기준으로 화면 밖 고정!
         float minX = -10f;
         float maxX = 10f;
         float minY = -6f;
@@ -88,11 +88,7 @@ public class GameManager : MonoBehaviour
                 break;
         }
 
-        // ?? 확실하게 계산된 화면 밖 좌표(spawnPosition)로 스폰!
-        GameObject newEnemy = Instantiate(selectedPrefab, spawnPosition, Quaternion.identity);
-
-        newEnemy.GetComponent<StandardEnemy>().coreTransform = coreTransform;
-        enemyCount++;
+        // ⭐️ 확실하게 계산된 화면 밖 좌표(spawnPosition)로 스폰!
     }
 }
 
