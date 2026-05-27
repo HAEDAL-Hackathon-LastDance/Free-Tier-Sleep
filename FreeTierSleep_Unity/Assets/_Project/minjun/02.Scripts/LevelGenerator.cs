@@ -99,11 +99,11 @@ public class LevelGenerator : MonoBehaviour
         {
             GameObject oldestPlatform = activePlatforms.Peek();
 
-            // 데드락 방지: 발판이 다른 스크립트(예: 시한부 팝업)에 의해 이미 파괴되거나 null이 된 경우
-            if (oldestPlatform == null)
+            // [방어 로직] 발판이 파괴되었거나, 기믹(PlatformTimer)에 의해 이미 비활성화(풀 반환)된 경우
+            if (oldestPlatform == null || !oldestPlatform.activeInHierarchy)
             {
                 activePlatforms.Dequeue();
-                continue;
+                continue; // 풀러를 중복 호출하지 않고 다음 큐 요소로 넘어감
             }
 
             // 큐의 가장 오래된 발판이 카메라 하단보다 아래에 있는지 확인

@@ -88,6 +88,12 @@ public class ObjectPooler : MonoBehaviour
             return;
         }
 
+        // [방어 로직] 이미 비활성화된 객체라면 중복 반환(Double Enqueue) 방지
+        if (!obj.activeSelf)
+        {
+            return;
+        }
+
         obj.SetActive(false);
         poolDictionary[tag].Enqueue(obj);
     }
