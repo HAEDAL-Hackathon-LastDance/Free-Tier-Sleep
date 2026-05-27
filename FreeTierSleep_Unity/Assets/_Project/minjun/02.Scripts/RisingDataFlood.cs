@@ -10,13 +10,47 @@ public class RisingDataFlood : MonoBehaviour
     public float maxYPosition = 50f;
 
     private bool isMoving = true;
+    private Camera mainCamera;
+    private PlayerController player;
+    private Collider2D col;
 
     // 외부(LevelGenerator 등)에서 현재 파도의 Y 위치를 가져갈 수 있도록 프로퍼티 추가
     public float CurrentY => transform.position.y;
 
+    private void Start()
+    {
+        mainCamera = Camera.main;
+        player = Object.FindFirstObjectByType<PlayerController>();
+        col = GetComponent<Collider2D>();
+    }
+
     void Update()
     {
         if (!isMoving) return;
+
+        // 플레이어가 사망한 경우, 글리치의 바닥이 카메라의 바닥까지만 올라오도록 제한
+        if (player != null && player.isDead && mainCamera != null && col != null)
+        {
+            float cameraBottomY = mainCamera.transform.position.y - mainCamera.orthographicSize;
+            float glitchBottomY = col.bounds.min.y;
+
+            if (glitchBottomY >= cameraBottomY)
+            {
+                // 이미 카메라 바닥에 도달했으면 더 이상 올라가지 않음
+                return;
+            }
+            
+            // 이번 프레임에 이동할 거리
+            float moveStep = riseSpeed * Time.deltaTime;
+            
+            if (glitchBottomY + moveStep > cameraBottomY)
+            {
+                // 이동 시 카메라 바닥을 넘어서게 되면, 딱 카메라 바닥까지만 맞춰서 이동
+                float distanceToMove = cameraBottomY - glitchBottomY;
+                transform.Translate(Vector3.up * distanceToMove);
+                return;
+            }
+        }
 
         // 매 프레임 위로 이동 (물리적인 오브젝트의 이동)
         transform.Translate(Vector3.up * riseSpeed * Time.deltaTime);
