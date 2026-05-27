@@ -2,7 +2,9 @@ Shader "Custom/GlitchWave"
 {
     Properties
     {
-        _BaseColor ("Base Color", Color) = (1.0, 0.1, 0.1, 1.0) // 붉은색
+        _BaseColor ("Primary Color (Red)", Color) = (1.0, 0.1, 0.1, 1.0)
+        _SecondaryColor ("Secondary Color (Green)", Color) = (0.1, 1.0, 0.1, 1.0)
+        _ColorMixRatio ("Color Mix Ratio", Range(0, 1)) = 0.5
         _Speed ("Rise Speed", Range(0, 50)) = 10.0
         _GridSize ("Grid Density", Float) = 40.0
         _Brightness ("Brightness", Range(0, 5)) = 1.5
@@ -33,6 +35,8 @@ Shader "Custom/GlitchWave"
             };
 
             float4 _BaseColor;
+            float4 _SecondaryColor;
+            float _ColorMixRatio;
             float _Speed;
             float _GridSize;
             float _Brightness;
@@ -78,7 +82,11 @@ Shader "Custom/GlitchWave"
                 float colSpeed = _Speed * (0.5 + 0.5 * random(float2(colId, 0.0)));
                 float colOffset = random(float2(colId, 1.0)) * 100.0;
                 
-                // 3. 위로 솟구치는 행(Row) 계산
+                // 3. 기둥별 색상 결정 (Primary vs Secondary)
+                float colorRand = random(float2(colId, 2.0));
+                float4 streamColor = lerp(_BaseColor, _SecondaryColor, step(_ColorMixRatio, colorRand));
+                
+                // 4. 위로 솟구치는 행(Row) 계산
                 // uv.y에 시간을 빼주면 위로 올라가는 효과가 생김
                 float rows = uv.y * _GridSize - _Time.y * colSpeed + colOffset;
                 float rowId = floor(rows);
@@ -86,22 +94,22 @@ Shader "Custom/GlitchWave"
                 float2 cellId = float2(colId, rowId);
                 float2 innerUV = frac(float2(columns, rows));
                 
-                // 4. 가짜 문자 형태 생성
+                // 5. 가짜 문자 형태 생성
                 float charShape = fakeCharacter(cellId, innerUV);
                 
-                // 5. 문자의 밝기 랜덤화 (깜빡이는 느낌)
+                // 6. 문자의 밝기 랜덤화 (깜빡이는 느낌)
                 float charBrightness = random(cellId + float2(0.0, _Time.y * 0.1));
                 
-                // 6. 꼬리(Trail) 효과: 기둥의 특정 길이만큼 그라데이션으로 사라짐
+                // 7. 꼬리(Trail) 효과: 기둥의 특정 길이만큼 그라데이션으로 사라짐
                 // frac(rows * 0.05)를 사용하여 긴 꼬리를 만듦
                 float trail = frac(rows * 0.05);
                 trail = smoothstep(0.1, 0.9, trail); // 부드러운 페이드 아웃
                 
-                // 7. 최종 강도 계산 (문자 형태 * 밝기 * 꼬리)
+                // 8. 최종 강도 계산 (문자 형태 * 밝기 * 꼬리)
                 float finalIntensity = charShape * charBrightness * trail * _Brightness;
                 
-                // 8. 붉은색 적용 및 알파 블렌딩
-                fixed4 finalColor = _BaseColor * finalIntensity;
+                // 9. 결정된 색상 적용 및 알파 블렌딩
+                fixed4 finalColor = streamColor * finalIntensity;
                 
                 // 알파값이 1을 초과하여 렌더링이 깨지거나 하얗게 타는 것을 방지
                 finalColor.a = saturate(finalIntensity); 
