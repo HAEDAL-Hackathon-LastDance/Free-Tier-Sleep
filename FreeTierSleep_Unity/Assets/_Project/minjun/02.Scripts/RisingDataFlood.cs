@@ -33,19 +33,13 @@ public class RisingDataFlood : MonoBehaviour
         {
             float cameraBottomY = mainCamera.transform.position.y - mainCamera.orthographicSize;
             float glitchBottomY = col.bounds.min.y;
-
-            if (glitchBottomY >= cameraBottomY)
-            {
-                // 이미 카메라 바닥에 도달했으면 더 이상 올라가지 않음
-                return;
-            }
-            
-            // 이번 프레임에 이동할 거리
             float moveStep = riseSpeed * Time.deltaTime;
-            
-            if (glitchBottomY + moveStep > cameraBottomY)
+
+            // 글리치 바닥이 이미 카메라 바닥보다 높거나(카메라가 추락하는 플레이어를 따라 내려온 경우),
+            // 이번 프레임에 이동할 거리가 카메라 바닥을 넘어서는 경우
+            if (glitchBottomY + moveStep >= cameraBottomY)
             {
-                // 이동 시 카메라 바닥을 넘어서게 되면, 딱 카메라 바닥까지만 맞춰서 이동
+                // 글리치의 바닥을 카메라의 바닥에 정확히 맞춤 (오차 및 여백 완벽 보정)
                 float distanceToMove = cameraBottomY - glitchBottomY;
                 transform.Translate(Vector3.up * distanceToMove);
                 return;
