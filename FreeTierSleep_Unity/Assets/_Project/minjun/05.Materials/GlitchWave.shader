@@ -102,7 +102,9 @@ Shader "Custom/GlitchWave"
                 
                 // 8. 붉은색 적용 및 알파 블렌딩
                 fixed4 finalColor = _BaseColor * finalIntensity;
-                finalColor.a = finalIntensity; // 검은 부분은 투명하게 처리
+                
+                // 알파값이 1을 초과하여 렌더링이 깨지거나 하얗게 타는 것을 방지
+                finalColor.a = saturate(finalIntensity); 
                 
                 return finalColor;
             }
