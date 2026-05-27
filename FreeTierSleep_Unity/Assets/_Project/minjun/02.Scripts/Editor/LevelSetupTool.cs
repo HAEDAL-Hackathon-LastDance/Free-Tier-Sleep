@@ -21,7 +21,7 @@ public class LevelSetupTool : EditorWindow
             AssetDatabase.CreateFolder("Assets/_Project/minjun", "Prefabs");
         }
 
-        // 2. PopupPlatform 프리팹 생성
+        // 2. PopupPlatform 프리팹 생성 (PlatformTimer 자동 부착)
         string prefabPath = folderPath + "/PopupPlatform.prefab";
         GameObject prefabObj = null;
 
@@ -30,6 +30,7 @@ public class LevelSetupTool : EditorWindow
             GameObject tempPlatform = new GameObject("PopupPlatform");
             tempPlatform.AddComponent<SpriteRenderer>();
             tempPlatform.AddComponent<BoxCollider2D>();
+            tempPlatform.AddComponent<PlatformTimer>(); // 시한부 기믹 스크립트 자동 부착
             
             prefabObj = PrefabUtility.SaveAsPrefabAsset(tempPlatform, prefabPath);
             DestroyImmediate(tempPlatform);
@@ -59,7 +60,7 @@ public class LevelSetupTool : EditorWindow
             Debug.Log("ObjectPooler가 씬에 생성 및 세팅되었습니다.");
         }
 
-        // 4. LevelManager 세팅
+        // 4. LevelManager 및 CameraFollow 세팅
         LevelGenerator levelGen = FindObjectOfType<LevelGenerator>();
         if (levelGen == null)
         {
@@ -69,12 +70,32 @@ public class LevelSetupTool : EditorWindow
             Camera mainCam = Camera.main;
             if (mainCam != null)
             {
+                // LevelGenerator에 카메라 할당
                 levelGen.mainCamera = mainCam;
                 levelGen.cameraTransform = mainCam.transform;
+
+                // Main Camera에 CameraFollow 스크립트 자동 부착 및 세팅
+                CameraFollow camFollow = mainCam.GetComponent<CameraFollow>();
+                if (camFollow == null)
+                {
+                    camFollow = mainCam.gameObject.AddComponent<CameraFollow>();
+                }
+
+                // 씬에서 Player 태그를 가진 오브젝트를 찾아 카메라 타겟으로 자동 할당
+                GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+                if (playerObj != null)
+                {
+                    camFollow.target = playerObj.transform;
+                    Debug.Log("CameraFollow 타겟에 Player가 자동 할당되었습니다.");
+                }
+                else
+                {
+                    Debug.LogWarning("씬에 'Player' 태그를 가진 오브젝트가 없습니다. CameraFollow의 Target을 직접 할당해주세요.");
+                }
             }
             else
             {
-                Debug.LogWarning("Main Camera를 찾을 수 없어 LevelGenerator에 할당하지 못했습니다.");
+                Debug.LogWarning("Main Camera를 찾을 수 없어 LevelGenerator 및 CameraFollow 세팅을 완료하지 못했습니다.");
             }
 
             levelGen.targetAltitude = 1000f;
@@ -90,7 +111,7 @@ public class LevelSetupTool : EditorWindow
         {
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             EditorSceneManager.SaveOpenScenes();
-            Debug.Log("Phase 1 레벨 세팅이 완료되고 씬이 저장되었습니다. 이제 이 에디터 스크립트를 삭제하셔도 됩니다.");
+            Debug.Log("Phase 1 레벨 세팅이 완료되고 씬이 저장되었습니다.");
         }
     }
 }
