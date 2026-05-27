@@ -31,22 +31,14 @@ public class InstantKill : MonoBehaviour
             hasKilled = true;
             Debug.Log("Player hit the Data Garbage Collector! Instant Kill.");
             
-            // 1. 플레이어 조작 잠금
+            // 플레이어의 Die 연출 메서드 호출
             PlayerController playerController = other.GetComponent<PlayerController>();
             if (playerController != null)
             {
-                playerController.enabled = false;
-            }
-
-            // 2. 물리 연산 정지 (허공에 멈추는 것이 어색하다면 simulated = false는 주석 처리하고 velocity만 0으로 만들 수도 있습니다)
-            Rigidbody2D rb = other.GetComponent<Rigidbody2D>();
-            if (rb != null)
-            {
-                rb.linearVelocity = Vector2.zero;
-                rb.simulated = false; // 물리 충돌 및 중력 연산 완전 정지
+                playerController.Die();
             }
             
-            // 3. 등록된 외부 이벤트 실행 (게임 오버 매니저 호출 등)
+            // 등록된 외부 이벤트 실행 (게임 오버 매니저 호출 등)
             onKill?.Invoke();
         }
     }

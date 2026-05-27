@@ -30,6 +30,7 @@ public class PlayerController : MonoBehaviour
     private float coyoteTimer;
     private bool isGrounded;
     private Vector2 moveInput;
+    private bool isDead = false; // 사망 상태 체크
     
     // 컴포넌트가 처음 붙거나, 인스펙터에서 Reset을 눌렀을 때 실행됨
     private void Reset()
@@ -60,6 +61,8 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (isDead) return; // 죽었으면 업데이트 중지
+
         CheckGround();
         HandleCoyoteTime();
         UpdateAnimations();
@@ -67,17 +70,21 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (isDead) return; // 죽었으면 물리 이동 중지
+
         ApplyMovement();
         ApplyBetterJump();
     }
 
     public void OnMove(InputValue value)
     {
+        if (isDead) return;
         moveInput = value.Get<Vector2>();
     }
 
     public void OnJump(InputValue value)
     {
+        if (isDead) return;
         if (value.isPressed)
         {
             AttemptJump();
@@ -184,6 +191,44 @@ public class PlayerController : MonoBehaviour
     private void ApplyMovement()
     {
         rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
+    }
+
+    // 외부(InstantKill 등)에서 호출할 수 있는 사망 처리 메서드
+    public void Die()
+    {
+        if (isDead) return;
+        isDead = true;
+
+        // 1. 색상 어둡게 변경
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = Color.gray;
+        }
+
+        // 2. 사망 애니메이션 재생 (Animator에 "Die" Trigger가 설정되어 있어야 함)
+        if (anim != null)
+        {
+            anim.SetTrigger("Die");
+        }
+
+        // 3. 콜라이더 끄기 (바닥을 뚫고 떨어지도록)
+        if (col != null)
+        {
+            col.enabled = false;
+        }
+
+        // 4. 위로 살짝 튕겨 오르며 떨어지는 연출
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.AddForce(Vector2.up * 10f, ForceMode2D.Impulse);
+        }
+
+        // 5. 입력 컴포넌트 비활성화
+        if (playerInput != null)
+        {
+            playerInput.enabled = false;
+        }
     }
 
     private void OnDrawGizmosSelected()
