@@ -8,6 +8,10 @@ public class InstantKill : MonoBehaviour
     [Tooltip("플레이어가 데미지를 입었을 때 호출될 이벤트 (UI 띄우기, 사운드 재생 등)")]
     public UnityEvent onKill;
 
+    [Header("Damage Zone Settings")]
+    [Tooltip("시각적인 글리치 상단보다 실제 피격 판정을 얼마나 더 아래로 내릴지 (여유 공간)")]
+    public float topMargin = 0.5f;
+
     [Header("Danger Zone Settings")]
     [Tooltip("시각적인 즉사 구역(하단 1/3)보다 실제 즉사 판정을 얼마나 더 아래로 내릴지 (여유 공간)")]
     public float dangerZoneMargin = 0.5f;
@@ -37,10 +41,20 @@ public class InstantKill : MonoBehaviour
             PlayerController playerController = other.GetComponent<PlayerController>();
             if (playerController != null)
             {
-                // 글리치 영역의 하단 1/3 지점 계산
+                // 글리치 영역의 상단 및 하단 계산
+                float topY = col.bounds.max.y;
                 float bottomY = col.bounds.min.y;
                 float height = col.bounds.size.y;
                 
+                // 상단 여유 공간(안전 구역) 계산
+                float safeThreshold = topY - topMargin;
+
+                // 플레이어가 상단 여유 공간에 머물고 있다면 데미지 판정 무시
+                if (other.transform.position.y > safeThreshold)
+                {
+                    return;
+                }
+
                 // 시각적 1/3 지점에서 margin만큼 더 아래로 내려서 실제 즉사 판정선을 만듦
                 float dangerThreshold = bottomY + (height / 3f) - dangerZoneMargin;
 
