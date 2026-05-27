@@ -12,6 +12,7 @@ public class LevelGenerator : MonoBehaviour
     public float spawnYThreshold = 15f;  // 카메라 기준 위로 얼마만큼 미리 생성할지
     public float minXClamp = -7f;        // 화면 좌측 한계선
     public float maxXClamp = 7f;         // 화면 우측 한계선
+    public float despawnMarginY = 15f;   // 카메라 아래로 발판이 사라지기까지의 여유 공간
 
     private Vector2 lastPlatformPos;
     private bool isLevelComplete = false;
@@ -89,8 +90,8 @@ public class LevelGenerator : MonoBehaviour
 
     private void DespawnOldPlatforms()
     {
-        // 카메라 하단 경계 계산
-        float cameraBottomY = mainCamera.transform.position.y - mainCamera.orthographicSize - 2f;
+        // 카메라 하단 경계 계산 (여유 공간 적용)
+        float cameraBottomY = mainCamera.transform.position.y - mainCamera.orthographicSize - despawnMarginY;
 
         while (activePlatforms.Count > 0)
         {

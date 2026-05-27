@@ -38,6 +38,15 @@ public class PlatformTimer : MonoBehaviour
         }
     }
 
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        // DataFlood와 닿으면 즉시 풀로 반환
+        if (other.CompareTag("DataFlood"))
+        {
+            ObjectPooler.Instance.ReturnToPool("Platform", gameObject);
+        }
+    }
+
     private IEnumerator DecayRoutine()
     {
         float duration = 1.5f;
