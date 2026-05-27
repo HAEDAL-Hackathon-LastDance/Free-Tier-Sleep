@@ -58,19 +58,30 @@ public class LevelGenerator : MonoBehaviour
 
     private void SpawnNextPlatform()
     {
-        // 난이도 조절: 고도가 높아질수록 발판 사이의 Y축 거리가 멀어짐 (최대 5f까지 증가)
+        // 난이도 조절: 고도가 높아질수록 발판 사이의 Y축 거리가 멀어짐
         float progressRatio = Mathf.Clamp01(cameraTransform.position.y / targetAltitude);
-        float currentMinY = Mathf.Lerp(2.0f, 3.5f, progressRatio);
-        float currentMaxY = Mathf.Lerp(3.5f, 5.0f, progressRatio);
+        
+        // 1. Y축 간격 대폭 확대 (시작값 3.5f, 최대 6.0f 기반으로 조정)
+        float currentMinY = Mathf.Lerp(3.5f, 5.0f, progressRatio);
+        float currentMaxY = Mathf.Lerp(6.0f, 7.5f, progressRatio);
 
-        // 이전 발판(lastPlatformPos) 기준으로 타이트한 난수 적용
-        float randomXOffset = Random.Range(-4f, 4f);
+        // 2. 강제 지그재그(Zig-Zag) 패턴 적용
+        float nextX;
+        if (lastPlatformPos.x < 0)
+        {
+            // 이전 발판이 왼쪽이면 다음은 오른쪽으로
+            nextX = Random.Range(2f, maxXClamp);
+        }
+        else
+        {
+            // 이전 발판이 오른쪽(또는 중앙)이면 다음은 왼쪽으로
+            nextX = Random.Range(minXClamp, -2f);
+        }
+
         float randomYOffset = Random.Range(currentMinY, currentMaxY);
-
-        float nextX = lastPlatformPos.x + randomXOffset;
         float nextY = lastPlatformPos.y + randomYOffset;
 
-        // X축이 화면 밖으로 무한정 나가지 않도록 Clamp 처리
+        // 3. X축이 화면 밖으로 무한정 나가지 않도록 Clamp 처리 (기존 유지)
         nextX = Mathf.Clamp(nextX, minXClamp, maxXClamp);
 
         // ObjectPooler를 이용해 발판 스폰 (새로운 위치 파라미터 전달)
