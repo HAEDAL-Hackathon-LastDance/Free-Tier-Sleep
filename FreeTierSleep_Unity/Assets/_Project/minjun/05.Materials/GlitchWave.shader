@@ -8,6 +8,8 @@ Shader "Custom/GlitchWave"
         _ColorDrift ("Color Drift", Range(0, 0.5)) = 0.05
         _Speed ("Wave Speed", Range(0, 50)) = 5.0
         _GridSize ("Grid Size (Pixelation)", Float) = 64.0
+        _ScanlineDensity ("Scanline Density", Float) = 300.0
+        _ScanlineSpeed ("Scanline Speed", Float) = 20.0
     }
     SubShader
     {
@@ -40,6 +42,8 @@ Shader "Custom/GlitchWave"
             float _ColorDrift;
             float _Speed;
             float _GridSize;
+            float _ScanlineDensity;
+            float _ScanlineSpeed;
 
             // 랜덤 노이즈 생성 함수
             float random(float2 st)
@@ -83,8 +87,8 @@ Shader "Custom/GlitchWave"
                 fixed4 colG = tex2D(_MainTex, distortedUV);
                 fixed4 colB = tex2D(_MainTex, distortedUV - float2(_ColorDrift * noise, 0));
 
-                // 6. 스캔라인 효과 (가로줄)
-                float scanline = sin(uv.y * 300.0 - _Time.y * 20.0) * 0.1 + 0.9;
+                // 6. 스캔라인 효과 (가로줄) - Properties로 빼서 해상도 대응
+                float scanline = sin(uv.y * _ScanlineDensity - _Time.y * _ScanlineSpeed) * 0.1 + 0.9;
 
                 // 최종 색상 조합 (글리치 효과 + 붉은색 베이스 컬러 + 스캔라인)
                 return fixed4(colR.r, colG.g, colB.b, colG.a) * _BaseColor * scanline;
