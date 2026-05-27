@@ -184,7 +184,35 @@ public class PlayerController : MonoBehaviour
             groundLayer
         );
 
-        isGrounded = hit.collider != null;
+        isGrounded = false;
+
+        if (hit.collider != null)
+        {
+            // 플레이어가 위로 상승 중일 때는 무조건 Ground 판정 제외 (원웨이 플랫폼 통과 시)
+            if (rb.linearVelocity.y > 0.1f)
+            {
+                isGrounded = false;
+            }
+            else
+            {
+                PlatformEffector2D effector = hit.collider.GetComponent<PlatformEffector2D>();
+                if (effector != null && effector.useOneWay)
+                {
+                    // 원웨이 플랫폼일 경우, 플레이어 발바닥이 플랫폼 윗면보다 높을 때만 인정
+                    float playerBottom = col.bounds.min.y;
+                    float platformTop = hit.collider.bounds.max.y;
+                    
+                    if (playerBottom >= platformTop - 0.15f)
+                    {
+                        isGrounded = true;
+                    }
+                }
+                else
+                {
+                    isGrounded = true;
+                }
+            }
+        }
 
         if (isGrounded && rb.linearVelocity.y <= 0.1f)
         {

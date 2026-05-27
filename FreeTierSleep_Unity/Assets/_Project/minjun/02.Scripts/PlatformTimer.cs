@@ -2,14 +2,17 @@ using System.Collections;
 using UnityEngine;
 
 [RequireComponent(typeof(SpriteRenderer))]
+[RequireComponent(typeof(Collider2D))]
 public class PlatformTimer : MonoBehaviour
 {
     private SpriteRenderer spriteRenderer;
+    private Collider2D col;
     private bool isTriggered = false;
 
     private void Awake()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
+        col = GetComponent<Collider2D>();
     }
 
     // 풀에서 꺼내질 때(활성화) 상태 초기화
@@ -44,12 +47,25 @@ public class PlatformTimer : MonoBehaviour
         // 플레이어와 충돌했고, 아직 트리거되지 않았다면
         if (!isTriggered && collision.gameObject.CompareTag("Player"))
         {
-            // 충돌 지점의 법선(Normal) 벡터를 확인하여 위에서 아래로 밟았는지 체크
-            // normal.y가 음수(-0.5 이하)라는 것은 플레이어가 발판의 상단면을 밟았음을 의미합니다.
-            if (collision.contacts.Length > 0 && collision.contacts[0].normal.y < -0.5f)
+            Rigidbody2D playerRb = collision.gameObject.GetComponent<Rigidbody2D>();
+            
+            // 1. 플레이어가 위로 상승 중일 때는 무시 (원웨이 플랫폼 통과 중)
+            if (playerRb != null && playerRb.linearVelocity.y <= 0.05f)
             {
-                isTriggered = true;
-                StartCoroutine(DecayRoutine());
+                // 2. 플레이어의 발바닥이 발판의 윗면보다 확실히 위에 있을 때만 인정
+                float playerBottom = collision.collider.bounds.min.y;
+                float platformTop = col.bounds.max.y;
+
+                // 오차 범위를 고려하여 -0.15f 정도 여유를 둠
+                if (playerBottom >= platformTop - 0.15f)
+                {
+                    // 3. 충돌 지점의 법선(Normal) 벡터를 확인하여 위에서 아래로 밟았는지 최종 체크
+                    if (collision.contacts.Length > 0 && collision.contacts[0].normal.y < -0.5f)
+                    {
+                        isTriggered = true;
+                        StartCoroutine(DecayRoutine());
+                    }
+                }
             }
         }
     }
