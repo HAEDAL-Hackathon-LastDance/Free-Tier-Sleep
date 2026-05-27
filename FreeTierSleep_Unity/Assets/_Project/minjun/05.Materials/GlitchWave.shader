@@ -5,7 +5,7 @@ Shader "Custom/GlitchWave"
         _BaseColor ("Primary Color (Red)", Color) = (1.0, 0.1, 0.1, 1.0)
         _SecondaryColor ("Secondary Color (Green)", Color) = (0.1, 1.0, 0.1, 1.0)
         _ColorMixRatio ("Color Mix Ratio", Range(0, 1)) = 0.5
-        _Speed ("Rise Speed", Range(0, 50)) = 10.0
+        _EffectSpeed ("Effect Scroll Speed", Range(0, 50)) = 10.0
         _GridSize ("Grid Density", Float) = 40.0
         _Brightness ("Brightness", Range(0, 5)) = 1.5
     }
@@ -37,7 +37,7 @@ Shader "Custom/GlitchWave"
             float4 _BaseColor;
             float4 _SecondaryColor;
             float _ColorMixRatio;
-            float _Speed;
+            float _EffectSpeed;
             float _GridSize;
             float _Brightness;
 
@@ -79,7 +79,7 @@ Shader "Custom/GlitchWave"
                 float colId = floor(columns);
                 
                 // 2. 기둥마다 상승 속도와 시작 위치(Offset)를 다르게 설정
-                float colSpeed = _Speed * (0.5 + 0.5 * random(float2(colId, 0.0)));
+                float colSpeed = _EffectSpeed * (0.5 + 0.5 * random(float2(colId, 0.0)));
                 float colOffset = random(float2(colId, 1.0)) * 100.0;
                 
                 // 3. 기둥별 색상 결정 (Primary vs Secondary)
