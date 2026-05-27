@@ -3,7 +3,7 @@ using UnityEngine;
 public class CameraFollow : MonoBehaviour
 {
     [Header("Target Settings")]
-    [Tooltip("따라갈 플레이어 오브젝트를 연결하세요.")]
+    [Tooltip("따라갈 플레이어 오브젝트를 연결하세요. 비워두면 Player 태그를 가진 오브젝트를 자동 탐색합니다.")]
     public Transform target;
 
     [Header("Follow Settings")]
@@ -18,6 +18,20 @@ public class CameraFollow : MonoBehaviour
 
     void Start()
     {
+        // 타겟이 지정되지 않았다면 Player 태그를 가진 오브젝트를 자동으로 찾습니다.
+        if (target == null)
+        {
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
+            {
+                target = playerObj.transform;
+            }
+            else
+            {
+                Debug.LogWarning("CameraFollow: 씬에서 'Player' 태그를 가진 오브젝트를 찾을 수 없습니다!");
+            }
+        }
+
         // 시작할 때 카메라의 현재 Y 위치를 최고 높이로 초기화
         highestY = transform.position.y;
     }
