@@ -3,9 +3,15 @@ using UnityEngine;
 public class RisingDataFlood : MonoBehaviour
 {
     [Header("Movement Settings")]
-    [Tooltip("파도가 초당 위로 올라가는 속도")]
+    [Tooltip("파도의 초기 상승 속도")]
     public float riseSpeed = 2f;
     
+    [Tooltip("파도가 도달할 수 있는 최대 상승 속도")]
+    public float maxRiseSpeed = 6f;
+    
+    [Tooltip("초당 증가하는 가속도 (값이 클수록 빨리 빨라짐)")]
+    public float acceleration = 0.1f;
+
     [Tooltip("파도가 도달할 수 있는 최대 Y 좌표")]
     public float maxYPosition = 50f;
 
@@ -27,6 +33,17 @@ public class RisingDataFlood : MonoBehaviour
     void LateUpdate()
     {
         if (!isMoving) return;
+
+        // 플레이어가 살아있을 때만 속도 가속 적용
+        if (player != null && !player.isDead)
+        {
+            if (riseSpeed < maxRiseSpeed)
+            {
+                riseSpeed += acceleration * Time.deltaTime;
+                // 최대 속도를 넘지 않도록 제한
+                riseSpeed = Mathf.Min(riseSpeed, maxRiseSpeed);
+            }
+        }
 
         // 플레이어가 사망한 경우, 글리치의 바닥이 카메라의 바닥까지만 올라오도록 제한
         if (player != null && player.isDead && mainCamera != null && col != null)
