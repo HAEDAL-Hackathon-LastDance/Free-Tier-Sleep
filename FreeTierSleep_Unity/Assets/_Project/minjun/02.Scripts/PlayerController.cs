@@ -266,6 +266,19 @@ public class PlayerController : MonoBehaviour
         return true;
     }
 
+    // 피격 시 위로 강하게 튕겨 오르게 하여 복구 기회를 제공하는 메서드
+    public void BounceUp(float force)
+    {
+        if (isDead) return;
+
+        // 기존 Y축 속도를 초기화하고 위로 힘을 가함
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+        rb.AddForce(Vector2.up * force, ForceMode2D.Impulse);
+
+        // 공중에서 다시 조작할 수 있도록 점프 횟수 회복
+        jumpsRemaining = maxJumps;
+    }
+
     // 무적 상태를 무시하고 즉시 사망 처리하는 메서드 (글리치 심층부 추락 시 사용)
     public void InstantDie()
     {

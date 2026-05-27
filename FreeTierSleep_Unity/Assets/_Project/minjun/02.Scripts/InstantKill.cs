@@ -12,6 +12,10 @@ public class InstantKill : MonoBehaviour
     [Tooltip("시각적인 즉사 구역(하단 1/3)보다 실제 즉사 판정을 얼마나 더 아래로 내릴지 (여유 공간)")]
     public float dangerZoneMargin = 0.5f;
 
+    [Header("Bounce Settings")]
+    [Tooltip("글리치 상단에 닿아 데미지를 입었을 때 위로 튕겨 오르는 힘")]
+    public float bounceForce = 18f;
+
     private Collider2D col;
 
     private void Awake()
@@ -54,6 +58,8 @@ public class InstantKill : MonoBehaviour
                     // 상단 구역 (일반 데미지)
                     if (playerController.TakeDamage())
                     {
+                        // 데미지를 입었을 때 위로 강하게 튕겨 오르게 하여 복구 기회 제공
+                        playerController.BounceUp(bounceForce);
                         onKill?.Invoke();
                     }
                 }
