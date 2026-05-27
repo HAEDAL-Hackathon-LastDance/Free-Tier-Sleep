@@ -14,7 +14,7 @@ public class InstantKill : MonoBehaviour
 
     [Header("Bounce Settings")]
     [Tooltip("글리치 상단에 닿아 데미지를 입었을 때 위로 튕겨 오르는 힘")]
-    public float bounceForce = 18f;
+    public float bounceForce = 25f;
 
     private Collider2D col;
 
