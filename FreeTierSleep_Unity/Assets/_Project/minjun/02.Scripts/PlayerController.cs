@@ -205,10 +205,10 @@ public class PlayerController : MonoBehaviour
             spriteRenderer.color = Color.gray;
         }
 
-        // 2. 사망 애니메이션 재생 (Animator에 "Die" Trigger가 설정되어 있어야 함)
+        // 2. 애니메이터 정지 (Die 애니메이션이 없을 때 다른 애니메이션 재생 방지)
         if (anim != null)
         {
-            anim.SetTrigger("Die");
+            anim.enabled = false;
         }
 
         // 3. 콜라이더 끄기 (바닥을 뚫고 떨어지도록)
