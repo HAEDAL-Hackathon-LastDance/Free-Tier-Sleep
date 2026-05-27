@@ -212,13 +212,11 @@ public class PlayerController : MonoBehaviour
             if (!isGrounded && coyoteTimer <= 0)
             {
                 jumpsRemaining--;
-                Debug.Log($"Air Jump! Remaining: {jumpsRemaining}");
             }
             else
             {
                 // 지상 점프(또는 코요테) 시, 다음 점프를 위해 횟수 1회 사용한 것으로 처리
                 jumpsRemaining = maxJumps - 1;
-                Debug.Log("Ground Jump!");
             }
 
             // 점프 힘 적용 (상승 속도 즉시 갱신을 위해 Y속도 초기화 후 AddForce)
@@ -227,10 +225,6 @@ public class PlayerController : MonoBehaviour
             
             // 점프 직후 코요테 타임 종료
             coyoteTimer = 0;
-        }
-        else
-        {
-            Debug.LogWarning("Jump Failed: No jumps remaining");
         }
     }
 
@@ -245,7 +239,6 @@ public class PlayerController : MonoBehaviour
         if (isDead || isInvincible) return false;
 
         currentHp--;
-        Debug.Log($"Player took damage! Current HP: {currentHp}");
         
         // UI 업데이트 이벤트 호출
         OnHealthChanged?.Invoke(currentHp);
@@ -281,7 +274,6 @@ public class PlayerController : MonoBehaviour
         currentHp = 0;
         OnHealthChanged?.Invoke(currentHp);
         
-        Debug.Log("Player instantly died from deep glitch!");
         Die();
     }
 

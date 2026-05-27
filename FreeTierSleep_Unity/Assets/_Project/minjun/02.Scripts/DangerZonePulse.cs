@@ -100,4 +100,21 @@ public class DangerZonePulse : MonoBehaviour
         glitchTexture.SetPixels(pixels);
         glitchTexture.Apply();
     }
+
+    // 동적으로 생성한 텍스처, 스프라이트, 머티리얼은 가비지 컬렉터가 자동으로 지워주지 않으므로
+    // 오브젝트 파괴 시 명시적으로 메모리에서 해제하여 메모리 누수를 방지합니다.
+    private void OnDestroy()
+    {
+        if (glitchTexture != null) 
+            Destroy(glitchTexture);
+            
+        if (spriteRenderer != null)
+        {
+            if (spriteRenderer.sprite != null) 
+                Destroy(spriteRenderer.sprite);
+                
+            if (spriteRenderer.material != null) 
+                Destroy(spriteRenderer.material);
+        }
+    }
 }
