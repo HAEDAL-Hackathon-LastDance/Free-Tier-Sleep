@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2604034188134252095}
   - component: {fileID: 7989259018234658310}
   - component: {fileID: 3994786633422340752}
-  m_Layer: 6
+  m_Layer: 8
   m_Name: PopupPlatform
   m_TagString: Untagged
   m_Icon: {fileID: 0}
