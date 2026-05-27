@@ -273,6 +273,18 @@ public class PlayerController : MonoBehaviour
         return true;
     }
 
+    // 무적 상태를 무시하고 즉시 사망 처리하는 메서드 (글리치 심층부 추락 시 사용)
+    public void InstantDie()
+    {
+        if (isDead) return;
+        
+        currentHp = 0;
+        OnHealthChanged?.Invoke(currentHp);
+        
+        Debug.Log("Player instantly died from deep glitch!");
+        Die();
+    }
+
     private IEnumerator InvincibilityRoutine()
     {
         isInvincible = true;
