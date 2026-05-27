@@ -227,6 +227,17 @@ public class PlayerController : MonoBehaviour
         // UI 업데이트 이벤트 호출
         OnHealthChanged?.Invoke(currentHp);
 
+        // 피격 시 글리치 머티리얼 적용 및 오염도 증가
+        if (glitchMaterial != null && spriteRenderer != null)
+        {
+            spriteRenderer.material = glitchMaterial;
+            float infectionRatio = 1f - ((float)currentHp / maxHp); // 잃은 체력 비율 (예: 1/3, 2/3)
+            if (spriteRenderer.material.HasProperty(glitchPropertyName))
+            {
+                spriteRenderer.material.SetFloat(glitchPropertyName, infectionRatio);
+            }
+        }
+
         if (currentHp <= 0)
         {
             Die();
@@ -315,9 +326,14 @@ public class PlayerController : MonoBehaviour
     // 점진적으로 감염되는 글리치 연출 코루틴
     private IEnumerator GlitchInfectionRoutine()
     {
-        // 머티리얼을 글리치 머티리얼로 교체
         spriteRenderer.material = glitchMaterial;
         
+        float startIntensity = 0f;
+        if (spriteRenderer.material.HasProperty(glitchPropertyName))
+        {
+            startIntensity = spriteRenderer.material.GetFloat(glitchPropertyName);
+        }
+
         float elapsed = 0f;
         
         while (elapsed < glitchDuration)
@@ -325,11 +341,10 @@ public class PlayerController : MonoBehaviour
             elapsed += Time.deltaTime;
             float t = elapsed / glitchDuration;
             
-            // 셰이더의 프로퍼티 값을 0에서 1로 서서히 증가시킴
-            // (셰이더에 따라 최대값이 다를 수 있으므로 필요시 1f를 다른 값으로 수정)
+            // 현재 오염도에서 1(최대치)까지 서서히 증가시킴
             if (spriteRenderer.material.HasProperty(glitchPropertyName))
             {
-                spriteRenderer.material.SetFloat(glitchPropertyName, Mathf.Lerp(0f, 1f, t));
+                spriteRenderer.material.SetFloat(glitchPropertyName, Mathf.Lerp(startIntensity, 1f, t));
             }
             
             yield return null;
