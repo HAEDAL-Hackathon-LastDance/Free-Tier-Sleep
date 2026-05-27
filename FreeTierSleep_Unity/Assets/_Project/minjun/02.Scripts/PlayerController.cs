@@ -30,7 +30,9 @@ public class PlayerController : MonoBehaviour
     private float coyoteTimer;
     private bool isGrounded;
     private Vector2 moveInput;
-    private bool isDead = false; // 사망 상태 체크
+    
+    // 외부(카메라 등)에서 사망 여부를 확인할 수 있도록 public으로 변경
+    public bool isDead = false; 
     
     // 컴포넌트가 처음 붙거나, 인스펙터에서 Reset을 눌렀을 때 실행됨
     private void Reset()

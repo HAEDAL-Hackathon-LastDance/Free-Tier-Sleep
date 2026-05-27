@@ -34,6 +34,14 @@ public class CameraFollow : MonoBehaviour
     {
         if (target == null) return;
 
+        // 플레이어가 사망했는지 확인
+        PlayerController player = target.GetComponent<PlayerController>();
+        if (player != null && player.isDead)
+        {
+            // 플레이어가 죽었다면 카메라 이동을 멈추고 현재 위치 유지
+            return;
+        }
+
         // 플레이어의 현재 위치에 오프셋을 더한 목표 Y 좌표 계산 (위아래 모두 추적)
         float targetY = target.position.y + yOffset;
 
