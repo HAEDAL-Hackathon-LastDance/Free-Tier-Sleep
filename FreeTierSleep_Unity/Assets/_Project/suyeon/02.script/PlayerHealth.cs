@@ -10,19 +10,22 @@ public class PlayerHealth : MonoBehaviour
     private int currentHP;
 
     [Header("UI References")]
-    public TextMeshProUGUI hpText;
-    public GameObject gameOverPanel;
-
-    // ⭐️ 추가: 플레이어의 색깔을 바꿀 컴포넌트
-    public SpriteRenderer spriteRenderer;
+<<<<<<< HEAD
+    public TextMeshProUGUI hpText;        // ȭ�鿡 ��� ü�� ����
+    public GameObject gameOverPanel;      // ���� �� ���ӿ��� ȭ��
 
     void Start()
     {
+        // ���� ���� �� �ʱ�ȭ 
+    {
         Time.timeScale = 1.0f;
+>>>>>>> origin/dev
         currentHP = maxHP;
         UpdateHPUI();
 
         if (gameOverPanel != null)
+<<<<<<< HEAD
+            gameOverPanel.SetActive(false); // ó���� ���ӿ��� â �����
             gameOverPanel.SetActive(false);
 
         // ⭐️ 보너스: 만약 유니티에서 실수로 SpriteRenderer를 안 끌어다 놔도, 자기가 알아서 찾게 만드는 안전장치!
@@ -30,6 +33,7 @@ public class PlayerHealth : MonoBehaviour
         {
             spriteRenderer = GetComponent<SpriteRenderer>();
         }
+>>>>>>> origin/dev
     }
 
     public void TakeDamage(int damage)
@@ -40,14 +44,14 @@ public class PlayerHealth : MonoBehaviour
         UpdateHPUI();
         Debug.Log("Ouch! Remaining HP: " + currentHP);
 
+<<<<<<< HEAD
+        // ü�� 0 ���� �� Game Over ó��
+=======
         // ⭐️ 바로 여기! 데미지를 입었을 때 화면 깜빡임 실행!
         StartCoroutine(FlashRed());
 
         // 체력 0 도달 시 Game Over 처리
-        if (currentHP <= 0)
-        {
             Die();
-        }
     }
 
     void UpdateHPUI()
@@ -58,6 +62,16 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
+<<<<<<< HEAD
+        Debug.Log("���� ����!");
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(true); // ���ӿ��� â ����
+
+        Time.timeScale = 0f; // �ð�(���� ����)�� ������ ����
+    }
+
+    // ����� ��ư ����
+=======
         Debug.Log("게임 오버!");
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
@@ -66,6 +80,7 @@ public class PlayerHealth : MonoBehaviour
     }
 
     // 재시작 버튼 구현
+>>>>>>> origin/dev
     public void RestartGame()
     {
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);

@@ -22,39 +22,51 @@ public class StandardEnemy : MonoBehaviour
     }
     void Update()
     {
-        // 코어가 게임에 존재할 때만 이동
+<<<<<<< HEAD
+        // �ھ ���ӿ� ������ ���� �̵�
         if (coreTransform != null)
         {
-            // 명세서 요구사항: Vector2.MoveTowards 사용
-            // 현재 위치에서 코어 위치를 향해 moveSpeed만큼 일정하게 직진
+            // ������ �䱸����: Vector2.MoveTowards ���
+            // ���� ��ġ���� �ھ� ��ġ�� ���� moveSpeed��ŭ �����ϰ� ����
             transform.position = Vector2.MoveTowards(transform.position, coreTransform.position, moveSpeed * Time.deltaTime);
         }
-        // 매 프레임마다 타이머 시간에 deltaTime을 더해줌
+        // �� �����Ӹ��� Ÿ�̸� �ð��� deltaTime�� ������
         attackTimer += Time.deltaTime;
     }
 
-    // Enter 대신 Stay를 쓰면 닿아있는 내내 계속 실행됨!
-    void OnTriggerStay2D(Collider2D other)
+    // Enter ��� Stay�� ���� ����ִ� ���� ��� �����!
+=======
     {
         if (other.CompareTag("Player"))
         {
+<<<<<<< HEAD
+            // Ÿ�̸Ӱ� ��Ÿ��(1��)�� �Ѱ��� ���� �������� ��
+=======
             // 타이머가 쿨타임(1초)을 넘겼을 때만 데미지를 줌
+>>>>>>> origin/dev
             if (attackTimer >= attackCooldown)
             {
                 PlayerHealth playerHP = other.GetComponent<PlayerHealth>();
 
-                if (playerHP != null)
                 {
                     playerHP.TakeDamage(attackDamage);
 
+<<<<<<< HEAD
+                    // ?? �÷��̾� ������Ʈ�� �پ��ִ� AudioSource(������)�� ã�� ����ض�!
+=======
                     // ?? 플레이어 오브젝트에 붙어있는 AudioSource(에러음)를 찾아 재생해라!
+>>>>>>> origin/dev
                     AudioSource playerAudio = other.GetComponent<AudioSource>();
                     if (playerAudio != null)
                     {
                         playerAudio.Play();
                     }
 
+<<<<<<< HEAD
+                    attackTimer = 0f; // �������ϱ� Ÿ�̸Ӹ� �ٽ� 0���� �ʱ�ȭ!
+=======
                     attackTimer = 0f; // 때렸으니까 타이머를 다시 0으로 초기화!
+>>>>>>> origin/dev
                 }
             }
         }

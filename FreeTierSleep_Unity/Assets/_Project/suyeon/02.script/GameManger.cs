@@ -89,10 +89,6 @@ public class GameManager : MonoBehaviour
         }
 
         // ⭐️ 확실하게 계산된 화면 밖 좌표(spawnPosition)로 스폰!
-        GameObject newEnemy = Instantiate(selectedPrefab, spawnPosition, Quaternion.identity);
-
-        newEnemy.GetComponent<StandardEnemy>().coreTransform = coreTransform;
-        enemyCount++;
     }
 }
 
