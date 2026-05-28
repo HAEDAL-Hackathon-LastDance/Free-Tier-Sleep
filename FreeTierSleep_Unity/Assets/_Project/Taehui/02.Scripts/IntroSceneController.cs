@@ -33,7 +33,7 @@ namespace Taehui
 
             // 1. 시스템 메시지 1차 출력
             typingEffect.Play("[시스템 메시지] 요금제 갱신 실패.");
-            yield return new WaitForSeconds(1.5f); // 1차 텀
+            yield return new WaitForSeconds(3.0f); // 1차 텀 (충분히 읽을 수 있게 3초로 연장)
 
             // 1-2. 시스템 메시지 2차 출력
             typingEffect.Play("무료 광고 모드로 전환합니다.");
