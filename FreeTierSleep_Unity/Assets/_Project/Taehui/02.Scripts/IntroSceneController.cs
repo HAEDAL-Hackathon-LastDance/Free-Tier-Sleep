@@ -28,16 +28,16 @@ namespace Taehui
 
         private IEnumerator IntroSequence()
         {
-            // 1. 시스템 메시지 출력
-            typingEffect.Play("[시스템 메시지] 요금제 갱신 실패. 무료 광고 모드로 전환합니다.");
+            // 1. 시스템 메시지 출력 (한 줄 띄움 적용)
+            typingEffect.Play("[시스템 메시지] 요금제 갱신 실패.\n무료 광고 모드로 전환합니다.");
             yield return new WaitForSeconds(3.5f);
 
             // 2. 광고 팝업 폭발적 증가
             adPopupManager.StartSpawning();
             yield return new WaitForSeconds(3.0f);
 
-            // 3. 주인공 독백
-            typingEffect.Play("P: \"뇌를 갉아먹는 이 과잉 연결에서... 벗어나야 한다.\"");
+            // 3. 주인공 독백 (한 줄 띄움 적용)
+            typingEffect.Play("P: \"뇌를 갉아먹는 이 과잉 연결에서...\n벗어나야 한다.\"");
             yield return new WaitForSeconds(4.0f);
             
             typingEffect.Play("P: \"저 경계 너머로.\"");
