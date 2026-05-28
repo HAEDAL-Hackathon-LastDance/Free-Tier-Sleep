@@ -48,4 +48,11 @@ public class StandardEnemy : MonoBehaviour
             }
         }
     }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        // 방화벽 선(Stroke)에 닿으면 즉시 소멸
+        if (other.GetComponent<Stroke>() != null)
+            Destroy(gameObject);
+    }
 }
