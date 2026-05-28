@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using TMPro;
 using UnityEngine.SceneManagement;
@@ -31,7 +31,7 @@ public class PlayerHealth : MonoBehaviour
     {
         if (currentHP <= 0) return;
 
-        currentHP -= damage;
+        currentHP = Mathf.Max(0, currentHP - damage);
         UpdateHPUI();
         Debug.Log("Ouch! Remaining HP: " + currentHP);
 
