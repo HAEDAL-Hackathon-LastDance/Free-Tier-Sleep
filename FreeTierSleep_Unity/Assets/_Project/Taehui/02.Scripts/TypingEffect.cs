@@ -10,7 +10,7 @@ namespace Taehui
     public class TypingEffect : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float typingSpeed = 0.08f;
+        [SerializeField] private float typingSpeed = 0.1f;
         
         private TMP_Text textComponent;
         private Coroutine typingCoroutine;
@@ -34,17 +34,25 @@ namespace Taehui
             typeClip = ProceduralAudioHelper.CreateTypeSound();
         }
 
-        public void Play(string message, System.Action onComplete = null)
+        public void Play(string message, System.Action onComplete = null, bool append = false)
         {
             if (typingCoroutine != null)
                 StopCoroutine(typingCoroutine);
             
-            typingCoroutine = StartCoroutine(TypeText(message, onComplete));
+            typingCoroutine = StartCoroutine(TypeText(message, onComplete, append));
         }
 
-        private IEnumerator TypeText(string message, System.Action onComplete)
+        private IEnumerator TypeText(string message, System.Action onComplete, bool append)
         {
-            textComponent.text = "";
+            if (!append)
+            {
+                textComponent.text = "";
+            }
+            else
+            {
+                textComponent.text += "\n"; // 이전 대사 끝에 줄바꿈을 덧붙임
+            }
+
             foreach (char letter in message.ToCharArray())
             {
                 textComponent.text += letter;

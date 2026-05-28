@@ -19,7 +19,7 @@ namespace Taehui
 
         [Header("Transition Settings")]
         [SerializeField] private string nextSceneName = "Phase1_Movement"; // 씬 이름 대응
-        [SerializeField] private float transitionDelay = 3.0f;
+        [SerializeField] private float transitionDelay = 3.5f;
 
         private void Start()
         {
@@ -28,27 +28,27 @@ namespace Taehui
 
         private IEnumerator IntroSequence()
         {
-            // 0. 침묵 단계: 텍스트 없이 캐릭터와 랜선 흐름만 보여주어 묘한 적막감 형성
-            yield return new WaitForSeconds(3.0f);
+            // 0. 침묵 단계: 텍스트 없이 캐릭터와 랜선 흐름만 보여주어 묘한 적막감 형성 (4초로 연장)
+            yield return new WaitForSeconds(4.0f);
 
             // 1. 시스템 메시지 1차 출력
             typingEffect.Play("[시스템 메시지] 요금제 갱신 실패.");
-            yield return new WaitForSeconds(3.0f); // 1차 텀 (충분히 읽을 수 있게 3초로 연장)
+            yield return new WaitForSeconds(4.0f); // 1차 텀 (독백 전 정적 4초로 연장)
 
-            // 1-2. 시스템 메시지 2차 출력
-            typingEffect.Play("무료 광고 모드로 전환합니다.");
-            yield return new WaitForSeconds(2.5f); // 2차 텀 (광고 폭발 전 긴장 유도)
+            // 1-2. 시스템 메시지 2차 출력 (1차 메시지 아랫줄에 덧붙여 남김)
+            typingEffect.Play("무료 광고 모드로 전환합니다.", null, true);
+            yield return new WaitForSeconds(3.5f); // 2차 텀 (광고 폭발 전 긴장 유도 3.5초로 연장)
 
             // 2. 광고 팝업 폭발적 증가
             adPopupManager.StartSpawning();
-            yield return new WaitForSeconds(4.0f);
+            yield return new WaitForSeconds(5.0f); // 광고 생성 시간 5초로 연장
 
             // 3. 주인공 독백 (한 줄 띄움 적용)
             typingEffect.Play("P: \"뇌를 갉아먹는 이 과잉 연결에서...\n벗어나야 한다.\"");
-            yield return new WaitForSeconds(5.0f);
+            yield return new WaitForSeconds(6.0f); // 독백 노출 시간 6초로 연장
             
             typingEffect.Play("P: \"저 경계 너머로.\"");
-            yield return new WaitForSeconds(3.5f);
+            yield return new WaitForSeconds(4.5f); // 독백 노출 시간 4.5초로 연장
 
             // 광고 생성 정지
             adPopupManager.StopSpawning();
