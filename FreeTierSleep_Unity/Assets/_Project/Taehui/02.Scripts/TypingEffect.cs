@@ -10,7 +10,7 @@ namespace Taehui
     public class TypingEffect : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private float typingSpeed = 0.05f;
+        [SerializeField] private float typingSpeed = 0.08f;
         
         private TMP_Text textComponent;
         private Coroutine typingCoroutine;

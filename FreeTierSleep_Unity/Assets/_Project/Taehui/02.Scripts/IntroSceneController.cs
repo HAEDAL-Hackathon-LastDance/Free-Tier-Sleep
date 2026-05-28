@@ -19,7 +19,7 @@ namespace Taehui
 
         [Header("Transition Settings")]
         [SerializeField] private string nextSceneName = "Phase1_Movement"; // 씬 이름 대응
-        [SerializeField] private float transitionDelay = 2.5f;
+        [SerializeField] private float transitionDelay = 3.0f;
 
         private void Start()
         {
@@ -30,18 +30,18 @@ namespace Taehui
         {
             // 1. 시스템 메시지 출력 (한 줄 띄움 적용)
             typingEffect.Play("[시스템 메시지] 요금제 갱신 실패.\n무료 광고 모드로 전환합니다.");
-            yield return new WaitForSeconds(3.5f);
+            yield return new WaitForSeconds(4.5f);
 
             // 2. 광고 팝업 폭발적 증가
             adPopupManager.StartSpawning();
-            yield return new WaitForSeconds(3.0f);
+            yield return new WaitForSeconds(4.0f);
 
             // 3. 주인공 독백 (한 줄 띄움 적용)
             typingEffect.Play("P: \"뇌를 갉아먹는 이 과잉 연결에서...\n벗어나야 한다.\"");
-            yield return new WaitForSeconds(4.0f);
+            yield return new WaitForSeconds(5.0f);
             
             typingEffect.Play("P: \"저 경계 너머로.\"");
-            yield return new WaitForSeconds(2.5f);
+            yield return new WaitForSeconds(3.5f);
 
             // 광고 생성 정지
             adPopupManager.StopSpawning();
