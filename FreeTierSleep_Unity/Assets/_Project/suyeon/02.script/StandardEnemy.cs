@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class StandardEnemy : MonoBehaviour
@@ -13,8 +14,13 @@ public class StandardEnemy : MonoBehaviour
     [Header("Target Tracking")]
     public Transform coreTransform;
 
+    private bool _isDying = false;
+    private SpriteRenderer _sr;
+
     void Start()
     {
+        _sr = GetComponent<SpriteRenderer>();
+
         GameObject realPlayer = GameObject.FindGameObjectWithTag("Player");
         if (realPlayer != null)
             coreTransform = realPlayer.transform;
@@ -22,6 +28,8 @@ public class StandardEnemy : MonoBehaviour
 
     void Update()
     {
+        if (_isDying) return;
+
         if (coreTransform != null)
             transform.position = Vector2.MoveTowards(transform.position, coreTransform.position, moveSpeed * Time.deltaTime);
 
@@ -36,14 +44,36 @@ public class StandardEnemy : MonoBehaviour
         {
             if (hit.GetComponent<Stroke>() != null)
             {
-                Destroy(gameObject);
+                StartCoroutine(FadeAndDestroy());
                 return;
             }
         }
     }
 
+    IEnumerator FadeAndDestroy()
+    {
+        _isDying = true;
+
+        float duration = 0.35f;
+        float elapsed = 0f;
+        Color original = _sr != null ? _sr.color : Color.white;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
+            if (_sr != null)
+                _sr.color = new Color(original.r, original.g, original.b, alpha);
+            yield return null;
+        }
+
+        Destroy(gameObject);
+    }
+
     void OnTriggerStay2D(Collider2D other)
     {
+        if (_isDying) return;
+
         if (other.CompareTag("Player"))
         {
             if (attackTimer >= attackCooldown)
@@ -62,5 +92,4 @@ public class StandardEnemy : MonoBehaviour
             }
         }
     }
-
 }
