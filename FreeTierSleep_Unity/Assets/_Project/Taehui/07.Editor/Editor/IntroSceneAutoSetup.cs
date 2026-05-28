@@ -84,10 +84,13 @@ namespace Taehui.Editor
             cableRect.anchorMin = new Vector2(0.5f, 0.5f);
             cableRect.anchorMax = new Vector2(0.5f, 1f);
             cableRect.anchoredPosition = new Vector2(10, 0); // 머리 뒤 위치 조정
-            cableRect.sizeDelta = new Vector2(8, 600); // 굵기 8px, 위로 길게 뻗음
+            cableRect.sizeDelta = new Vector2(6, 600); // 굵기 6px
             cableRect.pivot = new Vector2(0.5f, 0f);
             Image cableImage = cableObj.AddComponent<Image>();
-            cableImage.color = new Color(0.1f, 0.1f, 0.12f, 1f); // 짙은 회색 케이블
+            cableImage.color = new Color(0.05f, 0.12f, 0.15f, 1f); // 짙은 네온빛 남청색 베이스 케이블
+            
+            // 데이터 발광 패킷 흐름 연출 적용 (docs/05 기획 기반)
+            cableObj.AddComponent<CableDataFlow>();
 
             // 광고 영역
             GameObject adAreaObj = new GameObject("AdSpawnArea");
@@ -98,23 +101,35 @@ namespace Taehui.Editor
             AssignField(adManager, "adPrefabs", adPrefabs);
             AssignField(adManager, "spawnArea", adRect);
 
-            // 타이핑 텍스트
+            // 타이핑 대사창 패널 (가독성 향상용 반투명 배경)
+            GameObject panelObj = new GameObject("TypingPanel");
+            panelObj.transform.SetParent(canvasObj.transform, false);
+            RectTransform panelRect = panelObj.AddComponent<RectTransform>();
+            panelRect.anchorMin = new Vector2(0.08f, 0.04f);
+            panelRect.anchorMax = new Vector2(0.92f, 0.26f);
+            panelRect.anchoredPosition = Vector2.zero;
+            panelRect.sizeDelta = Vector2.zero;
+            
+            Image panelImage = panelObj.AddComponent<Image>();
+            panelImage.color = new Color(0.02f, 0.02f, 0.04f, 0.85f); // 어두운 85% 투명도
+
+            // 타이핑 텍스트 (패널의 자식으로 구성)
             GameObject textObj = new GameObject("TypingText");
-            textObj.transform.SetParent(canvasObj.transform, false);
+            textObj.transform.SetParent(panelObj.transform, false);
             TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
             if (koreanFont != null) tmp.font = koreanFont;
             
-            tmp.fontSize = 32;
-            tmp.color = new Color(0.9f, 0.9f, 0.9f, 1f);
+            tmp.fontSize = 28;
+            tmp.color = Color.white; // 완벽한 화이트로 또렷하게 표시
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.text = "CONNECTING...";
             TypingEffect typingEffect = textObj.AddComponent<TypingEffect>();
             
             RectTransform textRect = textObj.GetComponent<RectTransform>();
-            textRect.anchorMin = new Vector2(0.1f, 0.05f);
-            textRect.anchorMax = new Vector2(0.9f, 0.25f);
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
             textRect.anchoredPosition = Vector2.zero;
-            textRect.sizeDelta = Vector2.zero;
+            textRect.sizeDelta = new Vector2(-40, -20); // 상하좌우 여백을 주어 패널 테두리를 벗어나지 않게 함
 
             // 페이드 오버레이
             GameObject overlayObj = new GameObject("FadeOverlay");
