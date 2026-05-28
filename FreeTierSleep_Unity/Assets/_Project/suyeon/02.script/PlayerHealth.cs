@@ -37,6 +37,13 @@ public class PlayerHealth : MonoBehaviour
         if (currentHP <= 0) return; // 이미 체력이 0이면 무시
 
         currentHP -= damage;
+
+        // ⭐️ 1차 추가: 체력이 마이너스가 되면 0으로 고정! (음수 방지)
+        if (currentHP < 0)
+        {
+            currentHP = 0;
+        }
+
         UpdateHPUI();
         Debug.Log("Ouch! Remaining HP: " + currentHP);
 
