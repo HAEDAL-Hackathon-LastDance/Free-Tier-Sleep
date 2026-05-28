@@ -33,7 +33,6 @@ public class PlayerHealth : MonoBehaviour
 
         currentHP = Mathf.Max(0, currentHP - damage);
         UpdateHPUI();
-        Debug.Log("Ouch! Remaining HP: " + currentHP);
 
         if (spriteRenderer != null)
             StartCoroutine(FlashRed());
@@ -50,7 +49,6 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("게임 오버!");
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
         Time.timeScale = 0f;

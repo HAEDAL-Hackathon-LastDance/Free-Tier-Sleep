@@ -46,8 +46,6 @@ public class GameTimer : MonoBehaviour
         foreach (var enemy in GameObject.FindGameObjectsWithTag("Enemy"))
             Destroy(enemy);
 
-        Debug.Log("클리어! EndingScene으로 전환");
-
         // 엔딩 씬 전환 (씬 이름 확정되면 주석 해제)
         // SceneManager.LoadScene(clearSceneName);
     }
