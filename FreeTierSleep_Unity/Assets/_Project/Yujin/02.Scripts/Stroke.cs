@@ -31,7 +31,10 @@ public class Stroke : MonoBehaviour
 
         _lr.startWidth = 0.07f;
         _lr.endWidth = 0.04f;
-        _lr.material = new Material(Shader.Find("Sprites/Default"));
+        // URP 호환 셰이더 우선, 없으면 레거시 사용
+        Shader lineShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default")
+                         ?? Shader.Find("Sprites/Default");
+        _lr.material = new Material(lineShader);
         // 탁한 흰색 그라데이션 - 어두운 배경에 자연스럽게 보이는 오프화이트
         _lr.startColor = new Color(0.85f, 0.85f, 0.83f, 0.88f);
         _lr.endColor   = new Color(0.60f, 0.60f, 0.58f, 0.20f);
