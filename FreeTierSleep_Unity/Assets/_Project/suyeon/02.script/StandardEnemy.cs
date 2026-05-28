@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 public class StandardEnemy : MonoBehaviour
 {
@@ -11,6 +11,7 @@ public class StandardEnemy : MonoBehaviour
 
     [Header("Target Tracking")]
     public Transform coreTransform;    // 중앙 코어 Transform 참조
+
     void Start()
     {
         // [중요] 게임 시작 시, 씬에 있는 "Player"라는 태그를 가진 진짜 오브젝트를 찾아서 타겟으로 삼아라!
@@ -20,53 +21,41 @@ public class StandardEnemy : MonoBehaviour
             coreTransform = realPlayer.transform;
         }
     }
+
     void Update()
     {
-<<<<<<< HEAD
-        // �ھ ���ӿ� ������ ���� �̵�
+        // 코어가 씬에 존재하면 그쪽으로 이동
         if (coreTransform != null)
         {
-            // ������ �䱸����: Vector2.MoveTowards ���
-            // ���� ��ġ���� �ھ� ��ġ�� ���� moveSpeed��ŭ �����ϰ� ����
+            // 가이드라인 요구사항: Vector2.MoveTowards 사용
+            // 현재 위치에서 코어 위치로 moveSpeed만큼 일정하게 접근
             transform.position = Vector2.MoveTowards(transform.position, coreTransform.position, moveSpeed * Time.deltaTime);
         }
-        // �� �����Ӹ��� Ÿ�̸� �ð��� deltaTime�� ������
+        // 공격 타이머에 시간을 계속 더해줌
         attackTimer += Time.deltaTime;
     }
 
-    // Enter ��� Stay�� ���� ����ִ� ���� ��� �����!
-=======
+    // Trigger Stay를 통해 닿아있는 동안 주기적으로 데미지 판정
+    private void OnTriggerStay2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
         {
-<<<<<<< HEAD
-            // Ÿ�̸Ӱ� ��Ÿ��(1��)�� �Ѱ��� ���� �������� ��
-=======
             // 타이머가 쿨타임(1초)을 넘겼을 때만 데미지를 줌
->>>>>>> origin/dev
             if (attackTimer >= attackCooldown)
             {
                 PlayerHealth playerHP = other.GetComponent<PlayerHealth>();
-
+                if (playerHP != null)
                 {
                     playerHP.TakeDamage(attackDamage);
 
-<<<<<<< HEAD
-                    // ?? �÷��̾� ������Ʈ�� �پ��ִ� AudioSource(������)�� ã�� ����ض�!
-=======
-                    // ?? 플레이어 오브젝트에 붙어있는 AudioSource(에러음)를 찾아 재생해라!
->>>>>>> origin/dev
+                    // 플레이어 오브젝트에 붙어있는 AudioSource(에러음)를 찾아 재생해라!
                     AudioSource playerAudio = other.GetComponent<AudioSource>();
                     if (playerAudio != null)
                     {
                         playerAudio.Play();
                     }
 
-<<<<<<< HEAD
-                    attackTimer = 0f; // �������ϱ� Ÿ�̸Ӹ� �ٽ� 0���� �ʱ�ȭ!
-=======
                     attackTimer = 0f; // 때렸으니까 타이머를 다시 0으로 초기화!
->>>>>>> origin/dev
                 }
             }
         }
