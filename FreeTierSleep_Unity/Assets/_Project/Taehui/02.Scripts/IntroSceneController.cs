@@ -28,9 +28,16 @@ namespace Taehui
 
         private IEnumerator IntroSequence()
         {
-            // 1. 시스템 메시지 출력 (한 줄 띄움 적용)
-            typingEffect.Play("[시스템 메시지] 요금제 갱신 실패.\n무료 광고 모드로 전환합니다.");
-            yield return new WaitForSeconds(4.5f);
+            // 0. 침묵 단계: 텍스트 없이 캐릭터와 랜선 흐름만 보여주어 묘한 적막감 형성
+            yield return new WaitForSeconds(3.0f);
+
+            // 1. 시스템 메시지 1차 출력
+            typingEffect.Play("[시스템 메시지] 요금제 갱신 실패.");
+            yield return new WaitForSeconds(1.5f); // 1차 텀
+
+            // 1-2. 시스템 메시지 2차 출력
+            typingEffect.Play("무료 광고 모드로 전환합니다.");
+            yield return new WaitForSeconds(2.5f); // 2차 텀 (광고 폭발 전 긴장 유도)
 
             // 2. 광고 팝업 폭발적 증가
             adPopupManager.StartSpawning();
