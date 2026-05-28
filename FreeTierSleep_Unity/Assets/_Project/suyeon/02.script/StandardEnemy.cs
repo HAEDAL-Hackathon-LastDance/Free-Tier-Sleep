@@ -26,6 +26,20 @@ public class StandardEnemy : MonoBehaviour
             transform.position = Vector2.MoveTowards(transform.position, coreTransform.position, moveSpeed * Time.deltaTime);
 
         attackTimer += Time.deltaTime;
+        CheckLineCollision();
+    }
+
+    void CheckLineCollision()
+    {
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 0.4f);
+        foreach (var hit in hits)
+        {
+            if (hit.GetComponent<Stroke>() != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
+        }
     }
 
     void OnTriggerStay2D(Collider2D other)
@@ -49,10 +63,4 @@ public class StandardEnemy : MonoBehaviour
         }
     }
 
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        // 방화벽 선(Stroke)에 닿으면 즉시 소멸
-        if (other.GetComponent<Stroke>() != null)
-            Destroy(gameObject);
-    }
 }

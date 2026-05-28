@@ -38,7 +38,7 @@ public class Stroke : MonoBehaviour
         _lr.useWorldSpace = true;
         _lr.positionCount = 0;
 
-        _col.isTrigger = true;
+        _col.isTrigger = false;
 
         _initialized = true;
     }
