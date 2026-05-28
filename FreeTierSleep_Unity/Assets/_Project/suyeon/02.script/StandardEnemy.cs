@@ -16,10 +16,12 @@ public class StandardEnemy : MonoBehaviour
 
     private bool _isDying = false;
     private SpriteRenderer _sr;
+    private Collider2D _col;
 
     void Start()
     {
-        _sr = GetComponent<SpriteRenderer>();
+        _sr  = GetComponent<SpriteRenderer>();
+        _col = GetComponent<Collider2D>();
 
         GameObject realPlayer = GameObject.FindGameObjectWithTag("Player");
         if (realPlayer != null)
@@ -31,7 +33,8 @@ public class StandardEnemy : MonoBehaviour
         if (_isDying) return;
 
         if (coreTransform != null)
-            transform.position = Vector2.MoveTowards(transform.position, coreTransform.position, moveSpeed * Time.deltaTime);
+            transform.position = Vector2.MoveTowards(
+                transform.position, coreTransform.position, moveSpeed * Time.deltaTime);
 
         attackTimer += Time.deltaTime;
         CheckLineCollision();
@@ -39,10 +42,18 @@ public class StandardEnemy : MonoBehaviour
 
     void CheckLineCollision()
     {
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, 0.4f);
+        if (_col == null) return;
+
+        // 적 콜라이더의 실제 월드 경계(바깥 선)로 감지
+        Bounds b = _col.bounds;
+        Collider2D[] hits = Physics2D.OverlapAreaAll(
+            new Vector2(b.min.x, b.min.y),
+            new Vector2(b.max.x, b.max.y)
+        );
+
         foreach (var hit in hits)
         {
-            if (hit.GetComponent<Stroke>() != null)
+            if (hit != _col && hit.GetComponent<Stroke>() != null)
             {
                 StartCoroutine(FadeAndDestroy());
                 return;
@@ -55,7 +66,7 @@ public class StandardEnemy : MonoBehaviour
         _isDying = true;
 
         float duration = 0.35f;
-        float elapsed = 0f;
+        float elapsed  = 0f;
         Color original = _sr != null ? _sr.color : Color.white;
 
         while (elapsed < duration)

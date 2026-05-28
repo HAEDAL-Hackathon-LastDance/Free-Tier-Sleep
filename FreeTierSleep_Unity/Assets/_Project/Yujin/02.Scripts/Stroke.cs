@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class Stroke : MonoBehaviour
@@ -29,12 +29,12 @@ public class Stroke : MonoBehaviour
         EdgeCollider2D existingCol = gameObject.GetComponent<EdgeCollider2D>();
         _col = existingCol != null ? existingCol : gameObject.AddComponent<EdgeCollider2D>();
 
-        _lr.startWidth = 0.15f;
-        _lr.endWidth = 0.08f;
+        _lr.startWidth = 0.07f;
+        _lr.endWidth = 0.04f;
         _lr.material = new Material(Shader.Find("Sprites/Default"));
-        // 모노크롬 픽셀아트에 녹아드는 desaturated 블루-화이트 (디지털 방화벽 느낌)
-        _lr.startColor = new Color(0.65f, 0.83f, 0.97f, 0.95f);
-        _lr.endColor   = new Color(0.50f, 0.70f, 0.90f, 0.45f);
+        // 탁한 흰색 그라데이션 - 어두운 배경에 자연스럽게 보이는 오프화이트
+        _lr.startColor = new Color(0.85f, 0.85f, 0.83f, 0.88f);
+        _lr.endColor   = new Color(0.60f, 0.60f, 0.58f, 0.20f);
         _lr.useWorldSpace = true;
         _lr.positionCount = 0;
 
