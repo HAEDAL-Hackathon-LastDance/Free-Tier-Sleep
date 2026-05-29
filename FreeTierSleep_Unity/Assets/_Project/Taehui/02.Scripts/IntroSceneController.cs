@@ -1,0 +1,118 @@
+using System.Collections;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+
+namespace Taehui
+{
+    /// <summary>
+    /// 인트로 씬의 전체 흐름을 관리하는 컨트롤러
+    /// </summary>
+    public class IntroSceneController : MonoBehaviour
+    {
+        [Header("Components")]
+        [SerializeField] private TypingEffect typingEffect;
+        [SerializeField] private AdPopupManager adPopupManager;
+        [SerializeField] private CanvasGroup blackOverlay; // 페이드 아웃용
+        [SerializeField] private Volume postProcessVolume; // URP 볼륨 효과 제어용
+
+        [Header("Transition Settings")]
+        [SerializeField] private string nextSceneName = "Phase1_Movement"; // 씬 이름 대응
+        [SerializeField] private float transitionDelay = 3.5f;
+
+        private void Start()
+        {
+            StartCoroutine(IntroSequence());
+        }
+
+        private IEnumerator IntroSequence()
+        {
+            // 0. 침묵 단계: 텍스트 없이 캐릭터와 랜선 흐름만 보여주어 묘한 적막감 형성 (4초로 연장)
+            yield return new WaitForSeconds(4.0f);
+
+            // 1. 시스템 메시지 1차 출력
+            typingEffect.Play("[시스템 메시지] 요금제 갱신 실패.");
+            yield return new WaitForSeconds(4.0f); // 1차 텀 (독백 전 정적 4초로 연장)
+
+            // 1-2. 시스템 메시지 2차 출력 (1차 메시지 아랫줄에 덧붙여 남김)
+            typingEffect.Play("무료 광고 모드로 전환합니다.", null, true);
+            yield return new WaitForSeconds(3.5f); // 2차 텀 (광고 폭발 전 긴장 유도 3.5초로 연장)
+
+            // 2. 광고 팝업 폭발적 증가
+            adPopupManager.StartSpawning();
+            yield return new WaitForSeconds(5.0f); // 광고 생성 시간 5초로 연장
+
+            // 3. 주인공 독백 (한 줄 띄움 적용)
+            typingEffect.Play("P: \"뇌를 갉아먹는 이 과잉 연결에서...\n벗어나야 한다.\"");
+            yield return new WaitForSeconds(6.0f); // 독백 노출 시간 6초로 연장
+            
+            typingEffect.Play("P: \"저 경계 너머로.\"");
+            yield return new WaitForSeconds(4.5f); // 독백 노출 시간 4.5초로 연장
+
+            // 광고 생성 정지
+            adPopupManager.StopSpawning();
+
+            // 4. 글리치 및 전환 연출 (URP Post Processing & Glitch SFX)
+            yield return StartCoroutine(GlitchTransition());
+
+            // 5. 다음 씬 로드
+            SceneManager.LoadScene(nextSceneName);
+        }
+
+        private IEnumerator GlitchTransition()
+        {
+            ChromaticAberration chromatic = null;
+            LensDistortion lens = null;
+
+            if (postProcessVolume != null && postProcessVolume.profile != null)
+            {
+                postProcessVolume.profile.TryGet(out chromatic);
+                postProcessVolume.profile.TryGet(out lens);
+            }
+
+            // 글리치 SFX 재생
+            AudioSource audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+            }
+            audioSource.playOnAwake = false;
+            audioSource.loop = false;
+            audioSource.volume = 0.35f;
+
+            AudioClip glitchClip = ProceduralAudioHelper.CreateGlitchSound(transitionDelay);
+            if (glitchClip != null)
+            {
+                audioSource.PlayOneShot(glitchClip);
+            }
+
+            float duration = transitionDelay;
+            float elapsed = 0;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float progress = elapsed / duration;
+
+                // 포스트 프로세싱 왜곡 강도 스케일 업
+                if (chromatic != null)
+                {
+                    chromatic.intensity.value = Mathf.Lerp(0f, 1f, progress);
+                }
+                if (lens != null)
+                {
+                    lens.intensity.value = Mathf.Lerp(0f, -0.7f, progress);
+                    lens.scale.value = Mathf.Lerp(1f, 1.3f, progress);
+                }
+
+                // 페이드 검은화면도 점진적 적용
+                if (blackOverlay != null)
+                {
+                    blackOverlay.alpha = progress;
+                }
+
+                yield return null;
+            }
+        }
+    }
+}

@@ -1,99 +1,152 @@
-﻿using UnityEngine;
-using System.Collections; // ⭐️ 코루틴 쓰기 위해 필수!
+using System.Collections;
+using UnityEngine;
 
 public class StandardEnemy : MonoBehaviour
 {
     [Header("Attack Settings")]
-    public float attackCooldown = 1.0f; // 1초마다 데미지를 줌
-    private float attackTimer = 100f;   // 첫 타격은 닿자마자 바로 때리도록 큰 숫자로 시작
-
-    // ⭐️ 추가: 적이 공격(흔들림) 중인지 체크하는 스위치!
+    public float attackCooldown = 1.0f;
+    private float attackTimer = 100f;
+    
+    // 수연님 추가: 적이 공격(흔들림) 중인지 체크하는 스위치!
     private bool isAttacking = false;
 
     [Header("Enemy Settings")]
-    public float moveSpeed = 1.0f;     // 일정 속도로 직진 이동
-    public int attackDamage = 10;      // 코어에 줄 데미지
+    public float moveSpeed = 1.0f;
+    public int attackDamage = 10;
 
     [Header("Target Tracking")]
-    public Transform coreTransform;    // 중앙 코어 Transform 참조
+    public Transform coreTransform;
+
+    // ariwr님 추가: 사망(페이드아웃) 처리용 변수
+    private bool _isDying = false;
+    private SpriteRenderer _sr;
+    private Collider2D _col;
 
     void Start()
     {
-        // [중요] 게임 시작 시, 씬에 있는 "Player"라는 태그를 가진 진짜 오브젝트를 찾아서 타겟으로 삼아라!
+        _sr  = GetComponent<SpriteRenderer>();
+        _col = GetComponent<Collider2D>();
+
+        // [중요] 게임 시작 시 "Player" 태그를 찾아서 타겟으로 삼기
         GameObject realPlayer = GameObject.FindGameObjectWithTag("Player");
         if (realPlayer != null)
-        {
             coreTransform = realPlayer.transform;
-        }
     }
 
     void Update()
     {
-        // 코어가 게임에 존재할 때만 이동
-        if (coreTransform != null)
+        // 죽는 애니메이션 중이면 로직 정지 (ariwr)
+        if (_isDying) return;
+
+        // 코어가 존재하고, 공격 중이 아닐 때만 이동 (수연)
+        if (coreTransform != null && !isAttacking)
         {
-            // ⭐️ 수정: 공격(흔들림) 중이 아닐 때만 쫓아가도록! (안 그러면 덜덜 떨면서 다가옴)
-            if (!isAttacking)
-            {
-                transform.position = Vector2.MoveTowards(transform.position, coreTransform.position, moveSpeed * Time.deltaTime);
-            }
+            transform.position = Vector2.MoveTowards(
+                transform.position, coreTransform.position, moveSpeed * Time.deltaTime);
         }
 
-        // 매 프레임마다 타이머 시간에 deltaTime을 더해줌 (공격 중이 아닐 때만)
+        // 공격 중이 아닐 때만 쿨타임 증가 (수연)
         if (!isAttacking)
         {
             attackTimer += Time.deltaTime;
         }
+        
+        // 드로잉 선 충돌 감지 (ariwr)
+        CheckLineCollision(); 
     }
 
-    // Enter 대신 Stay를 쓰면 닿아있는 내내 계속 실행됨!
+    void CheckLineCollision()
+    {
+        if (_col == null) return;
+
+        // 적 콜라이더의 실제 월드 경계(바깥 선)로 감지
+        Bounds b = _col.bounds;
+        Collider2D[] hits = Physics2D.OverlapAreaAll(
+            new Vector2(b.min.x, b.min.y),
+            new Vector2(b.max.x, b.max.y)
+        );
+
+        foreach (var hit in hits)
+        {
+            if (hit != _col && hit.GetComponent<Stroke>() != null)
+            {
+                StartCoroutine(FadeAndDestroy());
+                return;
+            }
+        }
+    }
+
+    IEnumerator FadeAndDestroy()
+    {
+        _isDying = true;
+
+        float duration = 0.35f;
+        float elapsed  = 0f;
+        Color original = _sr != null ? _sr.color : Color.white;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
+            if (_sr != null)
+                _sr.color = new Color(original.r, original.g, original.b, alpha);
+            yield return null;
+        }
+
+        Destroy(gameObject);
+    }
+
     void OnTriggerStay2D(Collider2D other)
     {
-        // ⭐️ 수정: 공격 중이 아닐 때만 새로운 공격 시작 가능!
+        // 죽는 중이면 데미지 판정 무시 (ariwr)
+        if (_isDying) return;
+
+        // 공격 중이 아닐 때만 새로운 공격 시작 가능 (수연)
         if (other.CompareTag("Player") && !isAttacking)
         {
-            // 타이머가 쿨타임(1초)을 넘겼을 때만 데미지를 줌
             if (attackTimer >= attackCooldown)
             {
                 PlayerHealth playerHP = other.GetComponent<PlayerHealth>();
-                AudioSource playerAudio = other.GetComponent<AudioSource>(); // 오디오소스 미리 찾아두기
+                AudioSource playerAudio = other.GetComponent<AudioSource>(); 
 
                 if (playerHP != null)
                 {
-                    // ⭐️ 수정: 즉시 데미지 주던 코드를 지우고, 흔들림 코루틴 실행!
+                    // 즉시 데미지 대신 흔들림 코루틴 실행 (수연)
                     StartCoroutine(ShakeAndAttack(playerHP, playerAudio));
                 }
             }
         }
     }
 
-    // ⭐️ 3번 미션: 잠깐 멈춰서 부들부들 흔들리고 데미지를 주는 코루틴
+    // 3번 미션: 잠깐 멈춰서 부들부들 흔들리고 데미지를 주는 코루틴 (수연)
     IEnumerator ShakeAndAttack(PlayerHealth playerHP, AudioSource playerAudio)
     {
-        isAttacking = true; // 스위치 ON! (이동 멈춤, 타이머 멈춤)
-        attackTimer = 0f;   // 쿨타임은 미리 초기화
+        isAttacking = true; 
+        attackTimer = 0f;   
 
         Vector3 originalPos = transform.position;
 
-        // 5번 동안 랜덤한 위치로 살짝씩 튕기기
         for (int i = 0; i < 5; i++)
         {
+            // 흔들리는 도중에 선에 맞아 죽으면 코루틴 즉시 종료 (안전장치 통합)
+            if (_isDying) yield break; 
+
             transform.position = originalPos + (Vector3)Random.insideUnitCircle * 0.1f;
-            yield return new WaitForSeconds(0.05f); // 0.05초 대기
+            yield return new WaitForSeconds(0.05f); 
         }
 
-        // 원래 위치로 복구
+        if (_isDying) yield break; 
+
         transform.position = originalPos;
 
-        // 흔들림 연출이 끝난 후 진짜 데미지 넣기!
+        // 흔들림 연출 끝난 후 데미지 넣기
         playerHP.TakeDamage(attackDamage);
 
-        // 오디오도 데미지가 들어가는 이 타이밍에 재생!
         if (playerAudio != null)
         {
             playerAudio.Play();
         }
 
-        isAttacking = false; // 스위치 OFF! (다시 쫓아가기 시작)
+        isAttacking = false; 
     }
 }
