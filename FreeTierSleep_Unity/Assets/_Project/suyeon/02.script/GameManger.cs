@@ -10,10 +10,10 @@ public class GameManager : MonoBehaviour
     public Transform coreTransform;
 
     [Header("Spawn Variables")]
-    public float spawnDelay = 2.0f;
-    public float minSpawnDelay = 0.5f;
-    public float delayDecreaseRate = 0.2f;
-    public int enemiesPerWave = 5;
+    public float spawnDelay = 2.5f;
+    public float minSpawnDelay = 0.8f;
+    public float delayDecreaseRate = 0.15f;
+    public int enemiesPerWave = 4;
 
     public float spawnPadding = 2.0f;
 
@@ -140,7 +140,6 @@ public class GameManager : MonoBehaviour
     void ClearGame()
     {
         isCleared = true;
-        Debug.Log("AM 06:00 달성! 게임 클리어!");
 
         // 1. 씬에 있는 모든 몬스터 삭제
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");

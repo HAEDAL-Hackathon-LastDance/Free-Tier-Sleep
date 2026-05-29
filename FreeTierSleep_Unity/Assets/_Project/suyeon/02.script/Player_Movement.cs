@@ -3,7 +3,7 @@
 public class Player_Movement : MonoBehaviour
 {
     [Header("Movement Settings")]
-    public float speed = 1.5f;
+    public float speed = 2.5f;
 
     private Rigidbody2D rb;
     private Vector2 movement;

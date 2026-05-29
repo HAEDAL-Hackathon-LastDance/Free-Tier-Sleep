@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Health Settings")]
-    public int maxHP = 50;
+    public int maxHP = 100;
     private int currentHP;
 
     [Header("UI References")]
@@ -34,7 +34,6 @@ public class PlayerHealth : MonoBehaviour
         // ariwr님의 Phase 2 기능: 체력이 마이너스로 떨어지지 않게 방어
         currentHP = Mathf.Max(0, currentHP - damage);
         UpdateHPUI();
-        Debug.Log("Ouch! Remaining HP: " + currentHP);
 
         if (spriteRenderer != null)
             StartCoroutine(FlashRed());
@@ -51,7 +50,6 @@ public class PlayerHealth : MonoBehaviour
 
     void Die()
     {
-        Debug.Log("게임 오버!");
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
             

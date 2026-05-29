@@ -3,8 +3,8 @@ using UnityEngine;
 
 public class LineDrawer : MonoBehaviour
 {
-    [SerializeField] private float vertexLifetime = 5f;
-    [SerializeField] private int maxInk = 200;
+    [SerializeField] private float vertexLifetime = 6f;
+    [SerializeField] private int maxInk = 300;
     [SerializeField] private float minPointDistance = 0.1f;
 
     private List<Stroke> _activeStrokes = new List<Stroke>();
