@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class Stroke : MonoBehaviour
@@ -29,13 +29,19 @@ public class Stroke : MonoBehaviour
         EdgeCollider2D existingCol = gameObject.GetComponent<EdgeCollider2D>();
         _col = existingCol != null ? existingCol : gameObject.AddComponent<EdgeCollider2D>();
 
-        _lr.startWidth = 0.1f;
-        _lr.endWidth = 0.1f;
-        _lr.material = new Material(Shader.Find("Sprites/Default"));
-        _lr.startColor = Color.cyan;
-        _lr.endColor = Color.cyan;
+        _lr.startWidth = 0.07f;
+        _lr.endWidth = 0.04f;
+        // URP 호환 셰이더 우선, 없으면 레거시 사용
+        Shader lineShader = Shader.Find("Universal Render Pipeline/2D/Sprite-Unlit-Default")
+                         ?? Shader.Find("Sprites/Default");
+        _lr.material = new Material(lineShader);
+        // 탁한 흰색 그라데이션 - 어두운 배경에 자연스럽게 보이는 오프화이트
+        _lr.startColor = new Color(0.85f, 0.85f, 0.83f, 0.88f);
+        _lr.endColor   = new Color(0.60f, 0.60f, 0.58f, 0.20f);
         _lr.useWorldSpace = true;
         _lr.positionCount = 0;
+
+        _col.isTrigger = false;
 
         _initialized = true;
     }
@@ -63,6 +69,15 @@ public class Stroke : MonoBehaviour
 
         _vertices.Enqueue(new VertexData { position = newPos, spawnTime = Time.time });
         _hasPoints = true;
+    }
+
+    public void EatLastVertex()
+    {
+        if (_vertices.Count == 0) return;
+        VertexData[] arr = _vertices.ToArray();
+        _vertices.Clear();
+        for (int i = 0; i < arr.Length - 1; i++)
+            _vertices.Enqueue(arr[i]);
     }
 
     private void RemoveExpiredVertices()

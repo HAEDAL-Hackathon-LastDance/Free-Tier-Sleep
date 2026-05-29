@@ -29,7 +29,6 @@ public class GameManager : MonoBehaviour
     {
         while (true)
         {
-            Debug.Log($"[Wave {currentWave}] 시작! 스폰 딜레이: {spawnDelay}초");
 
             for (int i = 0; i < enemiesPerWave; i++)
             {
@@ -37,7 +36,6 @@ public class GameManager : MonoBehaviour
                 yield return new WaitForSeconds(spawnDelay);
             }
 
-            Debug.Log($"[Wave {currentWave}] 종료. 3초 대기...");
             yield return new WaitForSeconds(3.0f);
 
             currentWave++;
@@ -88,7 +86,13 @@ public class GameManager : MonoBehaviour
                 break;
         }
 
-        // ⭐️ 확실하게 계산된 화면 밖 좌표(spawnPosition)로 스폰!
+        // 계산된 화면 밖 좌표에서 스폰
+        GameObject newEnemy = Instantiate(selectedPrefab, spawnPosition, Quaternion.identity);
+
+        if (newEnemy.TryGetComponent<StandardEnemy>(out var enemy))
+            enemy.coreTransform = coreTransform;
+
+        enemyCount++;
     }
 }
 

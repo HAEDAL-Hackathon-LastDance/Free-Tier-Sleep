@@ -1,46 +1,96 @@
+using System.Collections;
 using UnityEngine;
 
 public class StandardEnemy : MonoBehaviour
 {
     [Header("Attack Settings")]
-    public float attackCooldown = 1.0f; // 1초마다 데미지를 줌
-    private float attackTimer = 100f;   // 첫 타격은 닿자마자 바로 때리도록 큰 숫자로 시작
+    public float attackCooldown = 1.0f;
+    private float attackTimer = 100f;
+
     [Header("Enemy Settings")]
-    public float moveSpeed = 1.0f;     // 일정 속도로 직진 이동
-    public int attackDamage = 10;      // 코어에 줄 데미지
+    public float moveSpeed = 1.0f;
+    public int attackDamage = 10;
 
     [Header("Target Tracking")]
-    public Transform coreTransform;    // 중앙 코어 Transform 참조
+    public Transform coreTransform;
+
+    private bool _isDying = false;
+    private SpriteRenderer _sr;
+    private Collider2D _col;
 
     void Start()
     {
-        // [중요] 게임 시작 시, 씬에 있는 "Player"라는 태그를 가진 진짜 오브젝트를 찾아서 타겟으로 삼아라!
+        _sr  = GetComponent<SpriteRenderer>();
+        _col = GetComponent<Collider2D>();
+
+        // [중요] 게임 시작 시 "Player" 태그를 찾아서 타겟으로 삼기
         GameObject realPlayer = GameObject.FindGameObjectWithTag("Player");
         if (realPlayer != null)
-        {
             coreTransform = realPlayer.transform;
-        }
     }
 
     void Update()
     {
-        // 코어가 씬에 존재하면 그쪽으로 이동
+        // 죽는 애니메이션 중이면 로직 정지
+        if (_isDying) return;
+
         if (coreTransform != null)
-        {
-            // 가이드라인 요구사항: Vector2.MoveTowards 사용
-            // 현재 위치에서 코어 위치로 moveSpeed만큼 일정하게 접근
-            transform.position = Vector2.MoveTowards(transform.position, coreTransform.position, moveSpeed * Time.deltaTime);
-        }
-        // 공격 타이머에 시간을 계속 더해줌
+            transform.position = Vector2.MoveTowards(
+                transform.position, coreTransform.position, moveSpeed * Time.deltaTime);
+
         attackTimer += Time.deltaTime;
+        
+        // ariwr님의 Phase 2 기능: 드로잉 선 충돌 감지
+        CheckLineCollision(); 
     }
 
-    // Trigger Stay를 통해 닿아있는 동안 주기적으로 데미지 판정
-    private void OnTriggerStay2D(Collider2D other)
+    void CheckLineCollision()
     {
+        if (_col == null) return;
+
+        // 적 콜라이더의 실제 월드 경계(바깥 선)로 감지
+        Bounds b = _col.bounds;
+        Collider2D[] hits = Physics2D.OverlapAreaAll(
+            new Vector2(b.min.x, b.min.y),
+            new Vector2(b.max.x, b.max.y)
+        );
+
+        foreach (var hit in hits)
+        {
+            if (hit != _col && hit.GetComponent<Stroke>() != null)
+            {
+                StartCoroutine(FadeAndDestroy());
+                return;
+            }
+        }
+    }
+
+    IEnumerator FadeAndDestroy()
+    {
+        _isDying = true;
+
+        float duration = 0.35f;
+        float elapsed  = 0f;
+        Color original = _sr != null ? _sr.color : Color.white;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float alpha = Mathf.Lerp(1f, 0f, elapsed / duration);
+            if (_sr != null)
+                _sr.color = new Color(original.r, original.g, original.b, alpha);
+            yield return null;
+        }
+
+        Destroy(gameObject);
+    }
+
+    void OnTriggerStay2D(Collider2D other)
+    {
+        if (_isDying) return;
+
         if (other.CompareTag("Player"))
         {
-            // 타이머가 쿨타임(1초)을 넘겼을 때만 데미지를 줌
             if (attackTimer >= attackCooldown)
             {
                 PlayerHealth playerHP = other.GetComponent<PlayerHealth>();
@@ -48,14 +98,11 @@ public class StandardEnemy : MonoBehaviour
                 {
                     playerHP.TakeDamage(attackDamage);
 
-                    // 플레이어 오브젝트에 붙어있는 AudioSource(에러음)를 찾아 재생해라!
                     AudioSource playerAudio = other.GetComponent<AudioSource>();
                     if (playerAudio != null)
-                    {
                         playerAudio.Play();
-                    }
 
-                    attackTimer = 0f; // 때렸으니까 타이머를 다시 0으로 초기화!
+                    attackTimer = 0f;
                 }
             }
         }
