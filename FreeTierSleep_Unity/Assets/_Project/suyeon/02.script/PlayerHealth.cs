@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Health Settings")]
-    public int maxHP = 100;
+    public int maxHP = 50;
     private int currentHP;
 
     [Header("UI References")]

@@ -10,16 +10,21 @@ public class GameManager : MonoBehaviour
     public Transform coreTransform;
 
     [Header("Spawn Variables")]
-    public float spawnDelay = 2.5f;
+    public float spawnDelay = 2.0f;
     public float minSpawnDelay = 0.8f;
     public float delayDecreaseRate = 0.15f;
-    public int enemiesPerWave = 4;
+    public int enemiesPerWave = 7;
 
     public float spawnPadding = 2.0f;
 
     [Header("Wave Status")]
     public int currentWave = 1;
     public int enemyCount = 0;
+
+    [Header("Player Speed Decay")]
+    public Player_Movement playerMovement;
+    public float speedDecreasePerWave = 0.2f;
+    public float minPlayerSpeed = 1.0f;
 
     [Header("Timer & Clear Settings")]
     public TextMeshProUGUI timerText; // AM 03:00을 띄울 텍스트
@@ -82,12 +87,21 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(3.0f);
 
             currentWave++;
-            enemiesPerWave += 3;
+            enemiesPerWave += 5;
 
             if (spawnDelay > minSpawnDelay)
             {
                 spawnDelay -= delayDecreaseRate;
                 if (spawnDelay < minSpawnDelay) spawnDelay = minSpawnDelay;
+            }
+
+            // 웨이브마다 플레이어 이동 속도 점감
+            if (playerMovement != null)
+            {
+                playerMovement.speed = Mathf.Max(
+                    minPlayerSpeed,
+                    playerMovement.speed - speedDecreasePerWave
+                );
             }
         }
     }
