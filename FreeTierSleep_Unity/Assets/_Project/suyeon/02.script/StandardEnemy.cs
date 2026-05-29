@@ -6,6 +6,9 @@ public class StandardEnemy : MonoBehaviour
     [Header("Attack Settings")]
     public float attackCooldown = 1.0f;
     private float attackTimer = 100f;
+    
+    // 수연님 추가: 적이 공격(흔들림) 중인지 체크하는 스위치!
+    private bool isAttacking = false;
 
     [Header("Enemy Settings")]
     public float moveSpeed = 1.0f;
@@ -14,6 +17,7 @@ public class StandardEnemy : MonoBehaviour
     [Header("Target Tracking")]
     public Transform coreTransform;
 
+    // ariwr님 추가: 사망(페이드아웃) 처리용 변수
     private bool _isDying = false;
     private SpriteRenderer _sr;
     private Collider2D _col;
@@ -31,16 +35,23 @@ public class StandardEnemy : MonoBehaviour
 
     void Update()
     {
-        // 죽는 애니메이션 중이면 로직 정지
+        // 죽는 애니메이션 중이면 로직 정지 (ariwr)
         if (_isDying) return;
 
-        if (coreTransform != null)
+        // 코어가 존재하고, 공격 중이 아닐 때만 이동 (수연)
+        if (coreTransform != null && !isAttacking)
+        {
             transform.position = Vector2.MoveTowards(
                 transform.position, coreTransform.position, moveSpeed * Time.deltaTime);
+        }
 
-        attackTimer += Time.deltaTime;
+        // 공격 중이 아닐 때만 쿨타임 증가 (수연)
+        if (!isAttacking)
+        {
+            attackTimer += Time.deltaTime;
+        }
         
-        // ariwr님의 Phase 2 기능: 드로잉 선 충돌 감지
+        // 드로잉 선 충돌 감지 (ariwr)
         CheckLineCollision(); 
     }
 
@@ -87,24 +98,55 @@ public class StandardEnemy : MonoBehaviour
 
     void OnTriggerStay2D(Collider2D other)
     {
+        // 죽는 중이면 데미지 판정 무시 (ariwr)
         if (_isDying) return;
 
-        if (other.CompareTag("Player"))
+        // 공격 중이 아닐 때만 새로운 공격 시작 가능 (수연)
+        if (other.CompareTag("Player") && !isAttacking)
         {
             if (attackTimer >= attackCooldown)
             {
                 PlayerHealth playerHP = other.GetComponent<PlayerHealth>();
+                AudioSource playerAudio = other.GetComponent<AudioSource>(); 
+
                 if (playerHP != null)
                 {
-                    playerHP.TakeDamage(attackDamage);
-
-                    AudioSource playerAudio = other.GetComponent<AudioSource>();
-                    if (playerAudio != null)
-                        playerAudio.Play();
-
-                    attackTimer = 0f;
+                    // 즉시 데미지 대신 흔들림 코루틴 실행 (수연)
+                    StartCoroutine(ShakeAndAttack(playerHP, playerAudio));
                 }
             }
         }
+    }
+
+    // 3번 미션: 잠깐 멈춰서 부들부들 흔들리고 데미지를 주는 코루틴 (수연)
+    IEnumerator ShakeAndAttack(PlayerHealth playerHP, AudioSource playerAudio)
+    {
+        isAttacking = true; 
+        attackTimer = 0f;   
+
+        Vector3 originalPos = transform.position;
+
+        for (int i = 0; i < 5; i++)
+        {
+            // 흔들리는 도중에 선에 맞아 죽으면 코루틴 즉시 종료 (안전장치 통합)
+            if (_isDying) yield break; 
+
+            transform.position = originalPos + (Vector3)Random.insideUnitCircle * 0.1f;
+            yield return new WaitForSeconds(0.05f); 
+        }
+
+        if (_isDying) yield break; 
+
+        transform.position = originalPos;
+
+        // 흔들림 연출 끝난 후 데미지 넣기
+        playerHP.TakeDamage(attackDamage);
+
+        if (playerAudio != null)
+        {
+            playerAudio.Play();
+        }
+
+        isAttacking = false; 
     }
 }
