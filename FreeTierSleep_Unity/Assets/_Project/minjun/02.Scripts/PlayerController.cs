@@ -15,10 +15,10 @@ public class PlayerController : MonoBehaviour
     public Action<int> OnHealthChanged;
 
     [Header("Movement Settings")]
-    public float moveSpeed = 8f;
-    
+    public float moveSpeed = 10f;
+
     [Header("Jump Settings")]
-    public float jumpForce = 12f;
+    public float jumpForce = 14f;
     public float fallMultiplier = 2.5f;      // 낙하 시 중력 배수
     public float lowJumpMultiplier = 2f;    // 점프 키를 살짝 눌렀을 때 중력 배수
     public int maxJumps = 2;
@@ -58,8 +58,8 @@ public class PlayerController : MonoBehaviour
     {
         groundCheckDistance = 0.1f;
         groundCheckSize = new Vector2(0.8f, 0.1f);
-        moveSpeed = 8f;
-        jumpForce = 12f;
+        moveSpeed = 10f;
+        jumpForce = 14f;
         maxHp = 3;
     }
 

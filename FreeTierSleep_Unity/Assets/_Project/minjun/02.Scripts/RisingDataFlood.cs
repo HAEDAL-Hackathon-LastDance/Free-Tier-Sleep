@@ -4,13 +4,13 @@ public class RisingDataFlood : MonoBehaviour
 {
     [Header("Movement Settings")]
     [Tooltip("파도의 초기 상승 속도")]
-    public float riseSpeed = 2f;
-    
+    public float riseSpeed = 3.5f;
+
     [Tooltip("파도가 도달할 수 있는 최대 상승 속도")]
-    public float maxRiseSpeed = 6f;
-    
+    public float maxRiseSpeed = 12f;
+
     [Tooltip("초당 증가하는 가속도 (값이 클수록 빨리 빨라짐)")]
-    public float acceleration = 0.1f;
+    public float acceleration = 0.3f;
 
     [Tooltip("파도가 도달할 수 있는 최대 Y 좌표")]
     public float maxYPosition = 50f;
