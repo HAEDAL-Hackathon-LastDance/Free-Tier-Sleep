@@ -23,6 +23,7 @@ public class StandardEnemy : MonoBehaviour
         _sr  = GetComponent<SpriteRenderer>();
         _col = GetComponent<Collider2D>();
 
+        // [중요] 게임 시작 시 "Player" 태그를 찾아서 타겟으로 삼기
         GameObject realPlayer = GameObject.FindGameObjectWithTag("Player");
         if (realPlayer != null)
             coreTransform = realPlayer.transform;
@@ -30,6 +31,7 @@ public class StandardEnemy : MonoBehaviour
 
     void Update()
     {
+        // 죽는 애니메이션 중이면 로직 정지
         if (_isDying) return;
 
         if (coreTransform != null)
@@ -37,7 +39,9 @@ public class StandardEnemy : MonoBehaviour
                 transform.position, coreTransform.position, moveSpeed * Time.deltaTime);
 
         attackTimer += Time.deltaTime;
-        CheckLineCollision();
+        
+        // ariwr님의 Phase 2 기능: 드로잉 선 충돌 감지
+        CheckLineCollision(); 
     }
 
     void CheckLineCollision()
