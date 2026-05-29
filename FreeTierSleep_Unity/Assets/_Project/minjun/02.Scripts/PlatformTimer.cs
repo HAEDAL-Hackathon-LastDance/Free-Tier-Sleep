@@ -83,7 +83,7 @@ public class PlatformTimer : MonoBehaviour
 
     private IEnumerator DecayRoutine()
     {
-        float duration = 1.0f;
+        float duration = 1.5f;
         float elapsed = 0f;
         float blinkInterval = 0.15f;
         bool isRed = false;

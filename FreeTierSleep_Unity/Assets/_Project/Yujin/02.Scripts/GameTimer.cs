@@ -8,7 +8,7 @@ public class GameTimer : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timerText;
 
     [Header("Settings")]
-    [SerializeField] private float totalTime = 180f; // AM 03:00 → 06:00 = 180초
+    [SerializeField] private float totalTime = 120f; // AM 03:00 → 05:00 = 120초 (데모용)
 
     [SerializeField] private string clearSceneName = "EndingScene";
 

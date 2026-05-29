@@ -10,10 +10,10 @@ public class GameManager : MonoBehaviour
     public Transform coreTransform;
 
     [Header("Spawn Variables")]
-    public float spawnDelay = 2.0f;
-    public float minSpawnDelay = 0.8f;
-    public float delayDecreaseRate = 0.15f;
-    public int enemiesPerWave = 7;
+    public float spawnDelay = 1.2f;
+    public float minSpawnDelay = 0.4f;
+    public float delayDecreaseRate = 0.2f;
+    public int enemiesPerWave = 5;
 
     public float spawnPadding = 2.0f;
 
@@ -30,7 +30,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI timerText; // AM 03:00을 띄울 텍스트
     public GameObject clearPanel;     // "Clear!" 글자가 적힌 화면 패널
     private float elapsedTime = 0f;
-    private float totalTime = 180f;   // 180초 (3분)
+    private float totalTime = 120f;   // 120초 (2분, 데모용)
     private bool isCleared = false;
 
     void Start()

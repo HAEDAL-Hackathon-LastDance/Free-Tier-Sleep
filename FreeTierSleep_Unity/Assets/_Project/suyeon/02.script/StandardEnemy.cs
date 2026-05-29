@@ -4,14 +4,14 @@ using UnityEngine;
 public class StandardEnemy : MonoBehaviour
 {
     [Header("Attack Settings")]
-    public float attackCooldown = 1.5f;
+    public float attackCooldown = 1.0f;
     private float attackTimer = 100f;
     
     // 수연님 추가: 적이 공격(흔들림) 중인지 체크하는 스위치!
     private bool isAttacking = false;
 
     [Header("Enemy Settings")]
-    public float moveSpeed = 1.2f;
+    public float moveSpeed = 2.0f;
     public int attackDamage = 8;
 
     [Header("Target Tracking")]

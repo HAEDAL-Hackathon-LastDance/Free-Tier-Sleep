@@ -10,7 +10,7 @@ public class LevelGenerator : MonoBehaviour
     public RisingDataFlood dataFlood; // 글리치(DataFlood) 참조 추가
 
     [Header("Generation Settings")]
-    public float targetAltitude = 400f; // 최종 목표 고도
+    public float targetAltitude = 1000f; // 최종 목표 고도
     public float spawnYThreshold = 15f;  // 카메라 기준 위로 얼마만큼 미리 생성할지
     public float minXClamp = -7f;        // 화면 좌측 한계선
     public float maxXClamp = 7f;         // 화면 우측 한계선
