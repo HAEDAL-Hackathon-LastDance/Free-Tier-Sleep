@@ -10,8 +10,8 @@ public class GameManager : MonoBehaviour
     public Transform coreTransform;
 
     [Header("Spawn Variables")]
-    public float spawnDelay = 2.0f;
-    public float minSpawnDelay = 0.5f;
+    public float spawnDelay = 1.2f;
+    public float minSpawnDelay = 0.4f;
     public float delayDecreaseRate = 0.2f;
     public int enemiesPerWave = 5;
 
@@ -21,11 +21,16 @@ public class GameManager : MonoBehaviour
     public int currentWave = 1;
     public int enemyCount = 0;
 
+    [Header("Player Speed Decay")]
+    public Player_Movement playerMovement;
+    public float speedDecreasePerWave = 0.2f;
+    public float minPlayerSpeed = 1.0f;
+
     [Header("Timer & Clear Settings")]
     public TextMeshProUGUI timerText; // AM 03:00을 띄울 텍스트
     public GameObject clearPanel;     // "Clear!" 글자가 적힌 화면 패널
     private float elapsedTime = 0f;
-    private float totalTime = 180f;   // 180초 (3분)
+    private float totalTime = 120f;   // 120초 (2분, 데모용)
     private bool isCleared = false;
 
     void Start()
@@ -47,7 +52,10 @@ public class GameManager : MonoBehaviour
         elapsedTime += Time.deltaTime;
 
         int startHour = 3;
-        int currentMinute = Mathf.FloorToInt(elapsedTime);
+
+        // ⭐️ 핵심 수정: 현실 시간 1초당 게임 시간 1.5분이 흐르도록 1.5f를 곱해줍니다!
+        // (120초 * 1.5 = 180분 = 정확히 3시간이 됩니다)
+        int currentMinute = Mathf.FloorToInt(elapsedTime * 1.5f);
 
         int displayHour = startHour + (currentMinute / 60);
         int displayMinute = currentMinute % 60;
@@ -57,7 +65,7 @@ public class GameManager : MonoBehaviour
             timerText.text = string.Format("AM {0:D2}:{1:D2}", displayHour, displayMinute);
         }
 
-        // 180초(AM 06:00) 달성 시 클리어 함수 실행!
+        // 120초(현실 시간 2분, 게임 시간 AM 06:00) 달성 시 클리어 함수 실행!
         if (elapsedTime >= totalTime)
         {
             ClearGame();
@@ -82,12 +90,21 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSeconds(3.0f);
 
             currentWave++;
-            enemiesPerWave += 3;
+            enemiesPerWave += 5;
 
             if (spawnDelay > minSpawnDelay)
             {
                 spawnDelay -= delayDecreaseRate;
                 if (spawnDelay < minSpawnDelay) spawnDelay = minSpawnDelay;
+            }
+
+            // 웨이브마다 플레이어 이동 속도 점감
+            if (playerMovement != null)
+            {
+                playerMovement.speed = Mathf.Max(
+                    minPlayerSpeed,
+                    playerMovement.speed - speedDecreasePerWave
+                );
             }
         }
     }
@@ -140,7 +157,6 @@ public class GameManager : MonoBehaviour
     void ClearGame()
     {
         isCleared = true;
-        Debug.Log("AM 06:00 달성! 게임 클리어!");
 
         // 1. 씬에 있는 모든 몬스터 삭제
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");

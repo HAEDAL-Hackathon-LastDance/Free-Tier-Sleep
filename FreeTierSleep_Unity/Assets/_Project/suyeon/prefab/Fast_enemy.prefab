@@ -106,7 +106,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StandardEnemy
   attackCooldown: 1
-  moveSpeed: 1.5
+  moveSpeed: 2
   attackDamage: 5
   coreTransform: {fileID: 0}
 --- !u!61 &4660982032822703570

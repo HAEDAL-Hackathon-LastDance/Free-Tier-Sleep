@@ -11,8 +11,8 @@ public class StandardEnemy : MonoBehaviour
     private bool isAttacking = false;
 
     [Header("Enemy Settings")]
-    public float moveSpeed = 1.0f;
-    public int attackDamage = 10;
+    public float moveSpeed = 2.0f;
+    public int attackDamage = 8;
 
     [Header("Target Tracking")]
     public Transform coreTransform;

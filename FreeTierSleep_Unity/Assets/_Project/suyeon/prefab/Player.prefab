@@ -32,7 +32,7 @@ Transform:
   m_GameObject: {fileID: 1425685249764716047}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1, y: 1, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.2, y: 0.2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -152,6 +152,7 @@ MonoBehaviour:
   maxHP: 50
   hpText: {fileID: 0}
   gameOverPanel: {fileID: 0}
+  spriteRenderer: {fileID: 0}
 --- !u!61 &495980211734834995
 BoxCollider2D:
   m_ObjectHideFlags: 0
