@@ -1139,7 +1139,7 @@ MonoBehaviour:
   adPopupManager: {fileID: 1448191749}
   blackOverlay: {fileID: 206254646}
   postProcessVolume: {fileID: 1006077092}
-  nextSceneName: Phase1_Movement
+  nextSceneName: phase1
   transitionDelay: 3
 --- !u!4 &2053549601
 Transform:

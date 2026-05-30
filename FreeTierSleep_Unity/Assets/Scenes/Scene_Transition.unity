@@ -156,7 +156,7 @@ MonoBehaviour:
   errorText: {fileID: 1593418830}
   blackOverlay: {fileID: 2124134439}
   postProcessVolume: {fileID: 1840065345}
-  nextSceneName: Scene_Phase2
+  nextSceneName: phase2
 --- !u!4 &581550934
 Transform:
   m_ObjectHideFlags: 0

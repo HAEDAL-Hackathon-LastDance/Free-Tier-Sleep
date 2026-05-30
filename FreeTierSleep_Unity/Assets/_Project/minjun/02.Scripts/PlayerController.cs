@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour
     public int maxHp = 3;
     public int currentHp;
     private bool isInvincible = false;
+    public bool IsInvincible => isInvincible;
     
     // 체력 변경 시 UI 등에 알리기 위한 이벤트
     public Action<int> OnHealthChanged;
@@ -29,6 +30,12 @@ public class PlayerController : MonoBehaviour
     public Vector2 groundCheckSize = new Vector2(0.8f, 0.1f);
     public float groundCheckDistance = 0.1f; // 발바닥으로부터 아래로 체크할 거리
 
+    [Header("Camera Bounds")]
+    [Tooltip("플레이어가 카메라 좌우 경계를 벗어나지 못하도록 X축을 클램핑")]
+    public bool clampToCameraBounds = true;
+    [Tooltip("카메라 가장자리로부터 추가로 안쪽으로 들여놓을 여백 (월드 단위)")]
+    public float cameraBoundsPadding = 0.2f;
+
     [Header("Glitch Effect Settings")]
     [Tooltip("사망 시 교체될 글리치 머티리얼")]
     public Material glitchMaterial;
@@ -45,23 +52,32 @@ public class PlayerController : MonoBehaviour
     private Animator anim;
     private SpriteRenderer spriteRenderer;
     private SpriteRenderer glitchOverlayRenderer; // 글리치 효과를 덮어씌울 자식 렌더러
+    private Camera mainCamera; // 카메라 클램핑용
+    private float cachedHalfCamWidth; // orthographicSize * aspect는 거의 변하지 않으므로 Start에서 캐싱
     private int jumpsRemaining;
     private float coyoteTimer;
     private bool isGrounded;
     private Vector2 moveInput;
     
     // 외부(카메라 등)에서 사망 여부를 확인할 수 있도록 public으로 변경
-    public bool isDead = false; 
-    
-    // 컴포넌트가 처음 붙거나, 인스펙터에서 Reset을 눌렀을 때 실행됨
-    private void Reset()
-    {
-        groundCheckDistance = 0.1f;
-        groundCheckSize = new Vector2(0.8f, 0.1f);
-        moveSpeed = 8f;
-        jumpForce = 12f;
-        maxHp = 3;
-    }
+    public bool isDead = false;
+
+    // [상태 이상] 조작 반전 / 중력 변조 상태
+    private bool isInputReversed = false;
+    private Coroutine inputReverseCoroutine;
+    private Coroutine gravityDebuffCoroutine;
+    private float defaultGravityScale; // 인스펙터의 원본 중력 값을 보존
+
+    // BounceUp 직후 일정 시간 동안 lowJumpMultiplier 적용 안 함 (튕긴 후 상승이 일찍 죽지 않도록)
+    private float bounceBoostUntil;
+    private Coroutine invincibilityCoroutine; // 무적 코루틴 참조 (중복 방지 및 재설정용)
+    private float knockbackUntil; // 이 시간까지 수평 이동 입력을 무시 (넉백 직후 다시 밀려 들어가는 것 방지)
+
+    [Header("Bounce Settings")]
+    [Tooltip("BounceUp 호출 후 이 시간 동안 점프 키 안 눌러도 상승 감속(lowJumpMultiplier)을 적용하지 않음")]
+    public float bounceBoostDuration = 0.3f;
+    [Tooltip("바운스 후 무적 지속 시간 (초) — 연속 피해를 막아 회복 기회를 보장")]
+    public float bounceInvincibleDuration = 2f;
 
     private void Awake()
     {
@@ -79,7 +95,16 @@ public class PlayerController : MonoBehaviour
 
         rb.freezeRotation = true;
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
-        
+
+        // 원본 중력 값 저장 (디버프 회복 기준점)
+        defaultGravityScale = rb.gravityScale;
+
+        mainCamera = Camera.main;
+        if (mainCamera != null)
+        {
+            cachedHalfCamWidth = mainCamera.orthographicSize * mainCamera.aspect;
+        }
+
         currentHp = maxHp;
 
         // 플레이어 원본 이미지를 유지하면서 위에 글리치를 띄우기 위한 자식 오브젝트 생성
@@ -113,6 +138,26 @@ public class PlayerController : MonoBehaviour
 
         ApplyMovement();
         ApplyBetterJump();
+    }
+
+    // 카메라가 플레이어를 따라간 직후 X 위치를 카메라 좌우 경계로 가둠
+    private void LateUpdate()
+    {
+        if (isDead || !clampToCameraBounds || mainCamera == null || col == null) return;
+
+        // 콜라이더 절반 폭 (월드 스케일 반영) + 추가 여백
+        float halfPlayerW = (col.size.x * Mathf.Abs(transform.localScale.x)) * 0.5f;
+        float minX = mainCamera.transform.position.x - cachedHalfCamWidth + halfPlayerW + cameraBoundsPadding;
+        float maxX = mainCamera.transform.position.x + cachedHalfCamWidth - halfPlayerW - cameraBoundsPadding;
+
+        if (transform.position.x < minX || transform.position.x > maxX)
+        {
+            Vector3 pos = transform.position;
+            pos.x = Mathf.Clamp(pos.x, minX, maxX);
+            transform.position = pos;
+            // 경계에 부딪힌 순간 X속도 제거 → 경계에 박혀 부르르 떨리는 현상 방지
+            rb.linearVelocity = new Vector2(0f, rb.linearVelocity.y);
+        }
     }
 
     public void OnMove(InputValue value)
@@ -161,9 +206,9 @@ public class PlayerController : MonoBehaviour
             // 떨어질 때 더 빨리 떨어지게 함
             rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (fallMultiplier - 1) * Time.fixedDeltaTime;
         }
-        else if (rb.linearVelocity.y > 0 && (jumpAction != null && !jumpAction.IsPressed()))
+        else if (rb.linearVelocity.y > 0 && (jumpAction != null && !jumpAction.IsPressed()) && Time.time >= bounceBoostUntil)
         {
-            // 점프 키를 뗐을 때 상승 속도를 더 빠르게 줄임
+            // 점프 키를 뗐을 때 상승 속도를 더 빠르게 줄임 (단, BounceUp 직후 보호 시간 동안은 적용 안 함)
             rb.linearVelocity += Vector2.up * Physics2D.gravity.y * (lowJumpMultiplier - 1) * Time.fixedDeltaTime;
         }
     }
@@ -258,7 +303,57 @@ public class PlayerController : MonoBehaviour
 
     private void ApplyMovement()
     {
-        rb.linearVelocity = new Vector2(moveInput.x * moveSpeed, rb.linearVelocity.y);
+        // 넉백 직후에는 수평 이동 입력을 무시해 다시 적에게 밀려 들어가지 않도록 함
+        if (Time.time < knockbackUntil) return;
+
+        // 조작 반전 상태이면 입력 X축에 -1을 곱함 (혼란 팝업 효과)
+        float effectiveX = isInputReversed ? -moveInput.x : moveInput.x;
+        rb.linearVelocity = new Vector2(effectiveX * moveSpeed, rb.linearVelocity.y);
+    }
+
+    // 넉백 직후 수평 이동 입력 차단 (Knocker 등 외부 강제 이동 시 사용)
+    public void ApplyExternalKnockback(float duration)
+    {
+        knockbackUntil = Time.time + duration;
+    }
+
+    // [상태 이상] 조작 반전 - 일정 시간 동안 좌우 입력 뒤집기 (혼란 팝업)
+    public void ApplyInputReverse(float duration)
+    {
+        if (isDead) return;
+
+        if (inputReverseCoroutine != null) StopCoroutine(inputReverseCoroutine);
+        inputReverseCoroutine = StartCoroutine(InputReverseRoutine(duration));
+    }
+
+    private IEnumerator InputReverseRoutine(float duration)
+    {
+        isInputReversed = true;
+        yield return new WaitForSeconds(duration);
+        isInputReversed = false;
+        inputReverseCoroutine = null;
+    }
+
+    // [상태 이상] 중력 변조 - 일정 시간 동안 중력 배수 변경 (무게 텍스트)
+    public void ApplyGravityDebuff(float duration, float multiplier = 2f)
+    {
+        if (isDead) return;
+
+        // 중복 적용 방지: 진행 중이던 디버프를 취소하고 원본 중력으로 복귀시킨 뒤 새로 시작
+        if (gravityDebuffCoroutine != null)
+        {
+            StopCoroutine(gravityDebuffCoroutine);
+            rb.gravityScale = defaultGravityScale;
+        }
+        gravityDebuffCoroutine = StartCoroutine(GravityDebuffRoutine(duration, multiplier));
+    }
+
+    private IEnumerator GravityDebuffRoutine(float duration, float multiplier)
+    {
+        rb.gravityScale = defaultGravityScale * multiplier;
+        yield return new WaitForSeconds(duration);
+        rb.gravityScale = defaultGravityScale;
+        gravityDebuffCoroutine = null;
     }
 
     // 데미지를 실제로 입었는지 여부를 반환하도록 수정 (이벤트 중복 호출 방지)
@@ -288,7 +383,7 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            StartCoroutine(InvincibilityRoutine());
+            StartInvincibility(1f);
         }
         
         return true;
@@ -299,12 +394,71 @@ public class PlayerController : MonoBehaviour
     {
         if (isDead) return;
 
-        // 기존 Y축 속도를 초기화하고 위로 힘을 가함
         rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
         rb.AddForce(Vector2.up * force, ForceMode2D.Impulse);
-
-        // 공중에서 다시 조작할 수 있도록 점프 횟수 회복
         jumpsRemaining = maxJumps;
+        bounceBoostUntil = Time.time + bounceBoostDuration;
+        StartInvincibility(bounceInvincibleDuration);
+    }
+
+    // 낙하 속도에 비례한 적응형 바운스 — 가비지 콜렉터 충돌 시 사용
+    // 빠르게 떨어질수록 더 높이 튕겨 오르며, min/max로 상하한 보장
+    public void BounceUpAdaptive(float minSpeed = 30f, float maxSpeed = 75f)
+    {
+        if (isDead) return;
+
+        float fallSpeed = Mathf.Abs(Mathf.Min(rb.linearVelocity.y, 0f));
+        float bounceSpeed = Mathf.Clamp(fallSpeed, minSpeed, maxSpeed);
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, bounceSpeed);
+        jumpsRemaining = maxJumps;
+        bounceBoostUntil = Time.time + bounceBoostDuration;
+        StartInvincibility(bounceInvincibleDuration);
+    }
+
+    // 무적 코루틴 시작 — 이미 진행 중이면 더 긴 쪽으로 교체
+    private void StartInvincibility(float duration)
+    {
+        if (invincibilityCoroutine != null) StopCoroutine(invincibilityCoroutine);
+        invincibilityCoroutine = StartCoroutine(InvincibilityRoutine(duration));
+    }
+
+    // 하트 아이템 — 체력 1칸 회복 (최대치 초과 금지)
+    public void HealOne()
+    {
+        if (isDead || currentHp >= maxHp) return;
+
+        currentHp++;
+        OnHealthChanged?.Invoke(currentHp);
+
+        // 회복으로 글리치 오염도 감소
+        if (glitchOverlayRenderer != null)
+        {
+            float infectionRatio = 1f - ((float)currentHp / maxHp);
+            if (glitchOverlayRenderer.material.HasProperty(glitchPropertyName))
+                glitchOverlayRenderer.material.SetFloat(glitchPropertyName, infectionRatio);
+            if (currentHp >= maxHp) glitchOverlayRenderer.enabled = false;
+        }
+    }
+
+    // 슈퍼점프 스프링 — 매우 높이 튀어 오르며 일정 시간 무적
+    public void SuperJump(float force, float invincibleDuration)
+    {
+        if (isDead) return;
+
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+        rb.AddForce(Vector2.up * force, ForceMode2D.Impulse);
+        jumpsRemaining = maxJumps;
+        bounceBoostUntil = Time.time + bounceBoostDuration;
+
+        // 가비지 콜렉터 파도와 충돌 시와 동일한 글리치 오염 효과
+        if (glitchOverlayRenderer != null)
+        {
+            glitchOverlayRenderer.enabled = true;
+            if (glitchOverlayRenderer.material.HasProperty(glitchPropertyName))
+                glitchOverlayRenderer.material.SetFloat(glitchPropertyName, 1f);
+        }
+
+        StartInvincibility(invincibleDuration);
     }
 
     // 무적 상태를 무시하고 즉시 사망 처리하는 메서드 (글리치 심층부 추락 시 사용)
@@ -318,41 +472,29 @@ public class PlayerController : MonoBehaviour
         Die();
     }
 
-    private IEnumerator InvincibilityRoutine()
+    private IEnumerator InvincibilityRoutine(float duration)
     {
         isInvincible = true;
-        float duration = 1f;
         float elapsed = 0f;
         float blinkInterval = 0.1f;
 
-        // 1초간 깜빡임 연출
         while (elapsed < duration)
         {
             if (spriteRenderer != null)
             {
                 spriteRenderer.enabled = !spriteRenderer.enabled;
-                // 오버레이도 같이 깜빡이도록 동기화
                 if (glitchOverlayRenderer != null)
-                {
                     glitchOverlayRenderer.enabled = spriteRenderer.enabled;
-                }
             }
             yield return new WaitForSeconds(blinkInterval);
             elapsed += blinkInterval;
         }
 
-        if (spriteRenderer != null)
-        {
-            spriteRenderer.enabled = true;
-        }
-        
-        // 1초 뒤 무적이 끝나면 글리치 효과 끄기 (원래 플레이어 모습으로 복귀)
-        if (glitchOverlayRenderer != null)
-        {
-            glitchOverlayRenderer.enabled = false;
-        }
-        
+        if (spriteRenderer != null) spriteRenderer.enabled = true;
+        if (glitchOverlayRenderer != null) glitchOverlayRenderer.enabled = false;
+
         isInvincible = false;
+        invincibilityCoroutine = null;
     }
 
     // 외부(InstantKill 등)에서 호출할 수 있는 사망 처리 메서드
@@ -402,6 +544,16 @@ public class PlayerController : MonoBehaviour
         {
             playerInput.enabled = false;
         }
+
+        // 6. 글리치 연출 후 게임오버 팝업
+        StartCoroutine(TriggerGameOver());
+    }
+
+    private IEnumerator TriggerGameOver()
+    {
+        yield return new WaitForSeconds(glitchDuration + 0.2f);
+        Time.timeScale = 0f;
+        GameOverScreen.Instance?.Show(transform.position.y);
     }
 
     // 점진적으로 감염되는 글리치 연출 코루틴
@@ -435,9 +587,11 @@ public class PlayerController : MonoBehaviour
     private void OnDrawGizmosSelected()
     {
         if (col == null) col = GetComponent<BoxCollider2D>();
+        if (col == null) return;
+
         Gizmos.color = Color.red;
         float worldHalfHeight = (col.size.y * transform.localScale.y) * 0.5f;
         Vector2 rayOrigin = (Vector2)transform.position + (col.offset * transform.localScale.y) + Vector2.down * worldHalfHeight;
-        Gizmos.DrawWireCube(rayOrigin + Vector2.down * 0.05f, groundCheckSize);
+        Gizmos.DrawWireCube(rayOrigin + Vector2.down * groundCheckDistance * 0.5f, groundCheckSize);
     }
 }

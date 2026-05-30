@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using TMPro;
-// 씬 전환 라이브러리(SceneManagement)는 엔딩 씬 안 쓰니까 뺐습니다!
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -29,6 +29,8 @@ public class GameManager : MonoBehaviour
     [Header("Timer & Clear Settings")]
     public TextMeshProUGUI timerText; // AM 03:00을 띄울 텍스트
     public GameObject clearPanel;     // "Clear!" 글자가 적힌 화면 패널
+    public string nextSceneName = "Scene_Ending";
+    public float clearToSceneDelay = 3f;
     private float elapsedTime = 0f;
     private float totalTime = 120f;   // 120초 (2분, 데모용)
     private bool isCleared = false;
@@ -153,22 +155,23 @@ public class GameManager : MonoBehaviour
         enemyCount++;
     }
 
-    // ⭐️ 씬 전환 싹 빼고 패널만 띄우는 클리어 함수!
     void ClearGame()
     {
         isCleared = true;
 
-        // 1. 씬에 있는 모든 몬스터 삭제
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
         foreach (GameObject enemy in enemies)
-        {
             Destroy(enemy);
-        }
 
-        // 2. Clear! 화면 띄우기 (여기서 게임은 평화롭게 정지됨!)
         if (clearPanel != null)
-        {
             clearPanel.SetActive(true);
-        }
+
+        StartCoroutine(LoadNextSceneAfterDelay());
+    }
+
+    IEnumerator LoadNextSceneAfterDelay()
+    {
+        yield return new WaitForSeconds(clearToSceneDelay);
+        SceneManager.LoadScene(nextSceneName);
     }
 }

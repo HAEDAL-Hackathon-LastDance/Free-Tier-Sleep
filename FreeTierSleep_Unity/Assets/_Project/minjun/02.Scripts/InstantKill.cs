@@ -17,8 +17,10 @@ public class InstantKill : MonoBehaviour
     public float dangerZoneMargin = 0.5f;
 
     [Header("Bounce Settings")]
-    [Tooltip("글리치 상단에 닿아 데미지를 입었을 때 위로 튕겨 오르는 힘")]
-    public float bounceForce = 25f;
+    [Tooltip("낙하 속도와 무관하게 보장되는 최소 바운스 속도 (유닛/초) — 발판까지 닿는 최소 높이 보장")]
+    public float minBounceSpeed = 30f;
+    [Tooltip("바운스 속도 상한 — 극단적 낙하 시 화면 밖으로 날아가지 않도록 제한")]
+    public float maxBounceSpeed = 75f;
 
     private Collider2D col;
 
@@ -72,8 +74,8 @@ public class InstantKill : MonoBehaviour
                     // 상단 구역 (일반 데미지)
                     if (playerController.TakeDamage())
                     {
-                        // 데미지를 입었을 때 위로 강하게 튕겨 오르게 하여 복구 기회 제공
-                        playerController.BounceUp(bounceForce);
+                        // 낙하 속도를 그대로 반전시켜 위로 쏨 — 오래 떨어질수록 높이 튕김
+                        playerController.BounceUpAdaptive(minBounceSpeed, maxBounceSpeed);
                         onKill?.Invoke();
                     }
                 }
