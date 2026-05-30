@@ -52,7 +52,10 @@ public class GameManager : MonoBehaviour
         elapsedTime += Time.deltaTime;
 
         int startHour = 3;
-        int currentMinute = Mathf.FloorToInt(elapsedTime);
+
+        // ⭐️ 핵심 수정: 현실 시간 1초당 게임 시간 1.5분이 흐르도록 1.5f를 곱해줍니다!
+        // (120초 * 1.5 = 180분 = 정확히 3시간이 됩니다)
+        int currentMinute = Mathf.FloorToInt(elapsedTime * 1.5f);
 
         int displayHour = startHour + (currentMinute / 60);
         int displayMinute = currentMinute % 60;
@@ -62,7 +65,7 @@ public class GameManager : MonoBehaviour
             timerText.text = string.Format("AM {0:D2}:{1:D2}", displayHour, displayMinute);
         }
 
-        // 180초(AM 06:00) 달성 시 클리어 함수 실행!
+        // 120초(현실 시간 2분, 게임 시간 AM 06:00) 달성 시 클리어 함수 실행!
         if (elapsedTime >= totalTime)
         {
             ClearGame();
