@@ -5,6 +5,9 @@ using UnityEngine;
 [RequireComponent(typeof(Collider2D))]
 public class PlatformTimer : MonoBehaviour
 {
+    // LevelGenerator가 스폰 직후 풀 태그를 주입 — 어느 풀로 반환할지 추적용
+    [HideInInspector] public string poolTag = "PopupPlatform1";
+
     private SpriteRenderer spriteRenderer;
     private Collider2D col;
     private bool isTriggered = false;
@@ -44,6 +47,7 @@ public class PlatformTimer : MonoBehaviour
 
     private void TryTriggerTimer(Collision2D collision)
     {
+        if (FreezeManager.IsFrozen) return; // 프리즈 중에는 발판 소멸 타이머 시작 안 함
         // 플레이어와 충돌했고, 아직 트리거되지 않았다면
         if (!isTriggered && collision.gameObject.CompareTag("Player"))
         {
@@ -77,7 +81,7 @@ public class PlatformTimer : MonoBehaviour
         {
             StopAllCoroutines();
             // 발판 스크립트가 붙은 최상위 GameObject를 풀로 안전하게 반환
-            ObjectPooler.Instance.ReturnToPool("Platform", this.gameObject);
+            ObjectPooler.Instance.ReturnToPool(poolTag, this.gameObject);
         }
     }
 
@@ -109,6 +113,6 @@ public class PlatformTimer : MonoBehaviour
         }
 
         // 시간이 다 되면 풀로 반환 (파괴되어 플레이어가 떨어짐)
-        ObjectPooler.Instance.ReturnToPool("Platform", gameObject);
+        ObjectPooler.Instance.ReturnToPool(poolTag, gameObject);
     }
 }

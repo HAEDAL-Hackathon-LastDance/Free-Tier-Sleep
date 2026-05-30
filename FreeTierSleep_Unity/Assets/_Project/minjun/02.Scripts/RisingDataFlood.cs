@@ -5,15 +5,36 @@ public class RisingDataFlood : MonoBehaviour
     [Header("Movement Settings")]
     [Tooltip("파도의 초기 상승 속도")]
     public float riseSpeed = 2f;
-    
-    [Tooltip("파도가 도달할 수 있는 최대 상승 속도")]
-    public float maxRiseSpeed = 6f;
-    
-    [Tooltip("초당 증가하는 가속도 (값이 클수록 빨리 빨라짐)")]
-    public float acceleration = 0.1f;
 
     [Tooltip("파도가 도달할 수 있는 최대 Y 좌표")]
     public float maxYPosition = 50f;
+
+    [Header("Step Acceleration Settings")]
+    [Tooltip("1단계 가속 트리거 고도 (플레이어 Y 기준)")]
+    public float step1Altitude = 300f;
+
+    [Tooltip("2단계 가속 트리거 고도 (플레이어 Y 기준)")]
+    public float step2Altitude = 600f;
+
+    [Tooltip("1단계 가속 배율 (기획: 1.1배)")]
+    public float step1Multiplier = 1.1f;
+
+    [Tooltip("2단계 가속 배율 (기획: 1.2배, 기본 속도 기준 누적 적용)")]
+    public float step2Multiplier = 1.2f;
+
+    [Header("Catch-up Settings")]
+    [Tooltip("플레이어와 파도 상단 사이 허용 거리. 이보다 멀어지면 파도가 점점 빠르게 따라옴 (낙하 거리 폭주 방지)")]
+    public float maxDistanceFromPlayer = 25f;
+
+    [Tooltip("거리가 멀어졌을 때 기본 riseSpeed에 추가되는 최대 속도 (유닛/초)")]
+    public float catchUpBonusSpeed = 12f;
+
+    [Tooltip("허용 거리 초과 1유닛당 추가되는 catch-up 속도 가중치")]
+    public float catchUpPerUnit = 0.5f;
+
+    private float baseRiseSpeed;    // 초기 속도를 보존하여 배율 계산 기준으로 사용
+    private bool step1Applied = false;
+    private bool step2Applied = false;
 
     private bool isMoving = true;
     private Camera mainCamera;
@@ -28,20 +49,30 @@ public class RisingDataFlood : MonoBehaviour
         mainCamera = Camera.main;
         player = Object.FindFirstObjectByType<PlayerController>();
         col = GetComponent<Collider2D>();
+        baseRiseSpeed = riseSpeed;
     }
 
     void LateUpdate()
     {
         if (!isMoving) return;
 
-        // 플레이어가 살아있을 때만 속도 가속 적용
+        // 플레이어가 살아있을 때만 단계별 가속 체크
         if (player != null && !player.isDead)
         {
-            if (riseSpeed < maxRiseSpeed)
+            float playerY = player.transform.position.y;
+
+            // Y=300 돌파 시 1.1배 가속 (1회만 적용)
+            if (!step1Applied && playerY >= step1Altitude)
             {
-                riseSpeed += acceleration * Time.deltaTime;
-                // 최대 속도를 넘지 않도록 제한
-                riseSpeed = Mathf.Min(riseSpeed, maxRiseSpeed);
+                riseSpeed = baseRiseSpeed * step1Multiplier;
+                step1Applied = true;
+            }
+
+            // Y=600 돌파 시 1.2배 가속 (기본 속도 기준, 1회만 적용)
+            if (!step2Applied && playerY >= step2Altitude)
+            {
+                riseSpeed = baseRiseSpeed * step2Multiplier;
+                step2Applied = true;
             }
         }
 
@@ -70,8 +101,21 @@ public class RisingDataFlood : MonoBehaviour
             }
         }
 
+        // catch-up: 플레이어가 너무 높이 올라간 경우 파도가 점점 빠르게 따라옴
+        // 평소엔 기본 riseSpeed, 거리가 maxDistanceFromPlayer를 넘기 시작하면 거리 비례 가산
+        float effectiveRiseSpeed = riseSpeed;
+        if (player != null && !player.isDead && col != null)
+        {
+            float distance = player.transform.position.y - col.bounds.max.y;
+            if (distance > maxDistanceFromPlayer)
+            {
+                float overDistance = distance - maxDistanceFromPlayer;
+                effectiveRiseSpeed += Mathf.Min(overDistance * catchUpPerUnit, catchUpBonusSpeed);
+            }
+        }
+
         // 매 프레임 위로 이동 (물리적인 오브젝트의 이동)
-        transform.position += Vector3.up * riseSpeed * Time.deltaTime;
+        transform.position += Vector3.up * effectiveRiseSpeed * Time.deltaTime;
 
         // 최대 높이에 도달하면 이동 정지
         if (transform.position.y >= maxYPosition)
