@@ -123,5 +123,54 @@ namespace Taehui
             clip.SetData(samples, 0);
             return clip;
         }
+
+        /// <summary>
+        /// 날카로운 시스템 경고음 (메인보드 BIOS/경고 비프 소리)
+        /// </summary>
+        public static AudioClip CreateBeepSound(float frequency, float duration)
+        {
+            int sampleRate = 44100;
+            int sampleCount = (int)(sampleRate * duration);
+            float[] samples = new float[sampleCount];
+
+            for (int i = 0; i < sampleCount; i++)
+            {
+                float t = (float)i / sampleRate;
+                float tone = Mathf.Sin(2f * Mathf.PI * frequency * t);
+                // 쨍한 BIOS 비프음을 연출하기 위해 스퀘어파(Square wave)로 변환
+                float squareTone = (tone > 0f) ? 0.25f : -0.25f;
+                // 뒤로 갈수록 완만하게 작아지는 감쇠 적용
+                float envelope = Mathf.Exp(-4f * t);
+                samples[i] = squareTone * envelope;
+            }
+
+            AudioClip clip = AudioClip.Create("SystemBeepSFX", sampleCount, 1, sampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
+
+        /// <summary>
+        /// TV 지지직 화이트 노이즈 사운드 생성
+        /// </summary>
+        public static AudioClip CreateStaticNoiseSound(float duration)
+        {
+            int sampleRate = 44100;
+            int sampleCount = (int)(sampleRate * duration);
+            float[] samples = new float[sampleCount];
+
+            for (int i = 0; i < sampleCount; i++)
+            {
+                // 완전 무작위 화이트 노이즈 생성
+                float noise = Random.value * 2f - 1f;
+                // TV 지지직거리는 볼륨 굴곡(LFO) 연출을 위해 저주파 변조
+                float t = (float)i / sampleRate;
+                float lfo = 0.7f + Mathf.Sin(2f * Mathf.PI * 8f * t) * 0.2f;
+                samples[i] = noise * lfo * 0.15f; // 너무 시끄럽지 않게 볼륨 제한
+            }
+
+            AudioClip clip = AudioClip.Create("TVStaticSFX", sampleCount, 1, sampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
     }
 }

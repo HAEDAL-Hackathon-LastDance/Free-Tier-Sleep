@@ -162,6 +162,12 @@ namespace Taehui.Editor
             AssignField(controller, "blackOverlay", overlayGroup);
             AssignField(controller, "postProcessVolume", globalVolume);
 
+            // 루프용 메타 필드 레퍼런스 주입
+            AssignField(controller, "titleText", titleTmp);
+            AssignField(controller, "accessButtonText", btnAccess.GetComponentInChildren<TextMeshProUGUI>());
+            AssignField(controller, "configButtonText", btnConfig.GetComponentInChildren<TextMeshProUGUI>());
+            AssignField(controller, "disconnectButtonText", btnDisconnect.GetComponentInChildren<TextMeshProUGUI>());
+
             // 버튼 클릭 리스너 스크립트 바인딩
             btnAccess.onClick.AddListener(controller.AccessCloud);
             btnConfig.onClick.AddListener(controller.ShowConfig);
