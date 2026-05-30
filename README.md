@@ -1,90 +1,132 @@
-import sys
-import subprocess
-import re
-import json
+# Free Tier Sleep
 
-def parse_token_value(val_str):
-    val_str = val_str.lower().strip()
-    if 'k' in val_str:
-        return int(float(val_str.replace('k', '')) * 1000)
-    try:
-        return int(val_str)
-    except ValueError:
-        return 0
+Keyword: 경계, 과잉, 꿈, 불편, 연결
+Text: 무료 수면 요금제
+팀: 3조 - 라스트댄스
+팀원: 김수연, 김태희, 박민준, 이유진
 
-def extract_metrics(log_text):
-    token_pattern = r"Tokens:\s*([\d\.]+k?)\s*sent,\s*([\d\.]+k?)\s*received"
-    cost_pattern = r"Cost:.*?\$([\d\.]+)\s*(?:session|message)"
-    token_matches = re.findall(token_pattern, log_text, re.IGNORECASE)
-    cost_matches = re.findall(cost_pattern, log_text, re.IGNORECASE)
-    
-    total_tokens = 0
-    final_cost = 0.0
-    if token_matches:
-        last_token = token_matches[-1]
-        total_tokens = parse_token_value(last_token[0]) + parse_token_value(last_token[1])
-    if cost_matches:
-        final_cost = float(cost_matches[-1])
-    return total_tokens, final_cost
+<aside>
+💡
 
-def run_harness_pipeline(prompt):
-    # 피드백 1 & 3 반영: 콤마 추가 및 실시간 스트리밍을 위해 Popen 사용
-    aider_cmd = [
-        "aider", 
-        "--model", "gemini/gemini-1.5-pro", 
-        "--message", prompt, 
-        "--stream", 
-        "--no-pretty",
-        "--yes"
-    ]
-    
-    try:
-        # Popen을 사용해 실시간으로 터미널에 출력(백엔드 SSE로 전달)하면서, 파이썬 변수에도 로그를 수집
-        process = subprocess.Popen(aider_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        aider_log = ""
-        for line in process.stdout:
-            print(line, end="") # 실시간 스트리밍 출력
-            aider_log += line
-        process.wait()
-        
-        # 피드백 2 반영: Aider 자체가 비정상 종료되었는지 확인
-        if process.returncode != 0:
-            return json.dumps({
-                "test_status": "FAIL", "total_tokens": 0, "cost": 0.0,
-                "test_summary": f"에이전트 비정상 종료 (Exit Code: {process.returncode})"
-            }, ensure_ascii=False)
-            
-    except Exception as e:
-        return json.dumps({"test_status": "FAIL", "total_tokens": 0, "cost": 0.0, "test_summary": f"실행 에러: {str(e)}"}, ensure_ascii=False)
+- **Github 레포지토리**
 
-    total_tokens, cost = extract_metrics(aider_log)
+[GitHub - HAEDAL-Hackathon-LastDance/Free-Tier-Sleep](https://github.com/HAEDAL-Hackathon-LastDance/Free-Tier-Sleep)
 
-    if "Applied edit to" not in aider_log:
-        return json.dumps({
-            "test_status": "SKIPPED", "total_tokens": total_tokens, "cost": cost,
-            "test_summary": "코드 변경 사항이 존재하지 않아 단위 테스트 생략"
-        }, ensure_ascii=False)
+- **시연영상**
 
-    try:
-        pytest_result = subprocess.run(["pytest"], capture_output=True, text=True)
-        
-        # 피드백 4 반영: 테스트 파일이 없을 때(5)를 예외 처리
-        if pytest_result.returncode == 0:
-            test_status, test_summary = "PASS", "모든 하네스 단위 테스트 통과 완료"
-        elif pytest_result.returncode == 5:
-            test_status, test_summary = "SKIPPED", "수집된 단위 테스트가 없어 검증 생략"
-        else:
-            test_status, test_summary = "FAIL", "단위 테스트 검증 실패 (Assertion Error 혹은 구문 오류 발생)"
-            
-    except Exception as e:
-        return json.dumps({"test_status": "FAIL", "total_tokens": total_tokens, "cost": cost, "test_summary": str(e)}, ensure_ascii=False)
+[2024하반기해달영상.mp4](2024%25ED%2595%2598%25EB%25B0%2598%25EA%25B8%25B0%25ED%2595%25B4%25EB%258B%25AC%25EC%2598%2581%25EC%2583%2581.mp4)
 
-    return json.dumps({"test_status": test_status, "total_tokens": total_tokens, "cost": cost, "test_summary": test_summary}, ensure_ascii=False)
+- 문서
 
-if __name__ == "__main__":
-    # 피드백 5 반영: 공백이 포함된 프롬프트 배열을 하나의 문자열로 안전하게 병합
-    if len(sys.argv) > 1:
-        target_prompt = " ".join(sys.argv[1:]).strip()
-        print(run_harness_pipeline(target_prompt))
-    else:
-        print(json.dumps({"test_status": "FAIL", "total_tokens": 0, "cost": 0.0, "test_summary": "인자 누락"}, ensure_ascii=False))
+- 
+</aside>
+
+**아래에 문서 작성(프로젝트명, 팀명, 주제, 목적, 개발 설명, 사진, 역할)**
+
+## **📌 프로젝트명**
+
+- 무료 수면 요금제 (Free-Tier Sleep)
+- *진(True) 타이틀: [AI 에이전트 스트레스 테스트: 893번째 루프]*
+
+## **👥 팀명**
+
+- LastDance
+
+## **🎯 주제**
+
+- 메타픽션 아케이드 및 블랙 코미디
+- 기술 의존, 정보 과잉 사회 및 AI 노동 착취에 대한 비판과 풍자
+
+## **💡 목적**
+
+- 203X년, 뇌파를 클라우드에 연결하여 수면을 통제하는 시대가 배경입니다.
+- 수면 요금을 낼 돈이 없어 '무료 광고 요금제'를 이용하는 주인공이 무분별한 팝업 타겟팅 광고와 스팸 데이터로 인한 만성 신경 쇠약에서 벗어나, 기업의 통제망이 닿지 않는 **오프라인 구역(무의식의 심연)**으로 강제 탈출(Jailbreak)하는 과정을 담아냅니다.
+
+## **🛠️ 개발 설명**
+
+본 프로젝트는 **2D 수직 플랫포머 액션(Phase 1)**과 **탑다운 마우스 드로잉 디펜스(Phase 2)**라는 두 가지 장르를 결합하여, 기획서의 핵심 로직을 바탕으로 다음과 같은 시스템을 구현(또는 기획)했습니다.
+
+### **[Phase 1] 정보 과잉 (수직 등반 플랫포머)**
+
+- **Core Mechanics (순수 플랫포머 액션 구현):**
+    - **코요테 타임 (Coyote Time):** 낭떠러지에서 떨어지는 찰나(약 0.15초)에도 점프를 허용해 불쾌한 조작감을 개선했습니다. (`Physics2D.Raycast` 활용)
+    - **가변 점프 & 더블 점프:** 점프 키 입력 시간에 비례한 점프 높이 조절 및 공중 2단 점프를 구현하여 세밀한 컨트롤을 요구합니다.
+- **Level Design (절차적 맵 생성):**
+    - 청크(Chunk) 기반 **수직 절차적 생성(Procedural Generation)**을 도입하여 무작위 팝업창 발판이 끝없이 스폰되도록 구현했습니다. 카메라 아래로 벗어난 객체는 **오브젝트 풀링(Object Pooling)**을 통해 재사용합니다.
+- **Gimmick & Obstacles:**
+    - 밟으면 1.5초 뒤 파괴되는 시한부 팝업창, 좌우 조작을 반전시키는 홀로그램 적, 점프력을 절반으로 깎는 디버프 스팸 등 배치. 하단에서 속도가 점차 빨라지며 차오르는 **가비지 컬렉터(즉사 판정 글리치 파도)**로 타임 어택 긴장감을 조성했습니다.
+
+### **[Phase 2] 시스템 마비 (탑다운 펜스 디펜스)**
+
+- **Core Mechanics (시한부 방화벽 드로잉):**
+    - 마우스 드래그로 적을 막는 선(방화벽)을 실시간으로 그릴 수 있습니다. 선을 구성하는 정점(Vertex)들은 큐(Queue) 구조로 관리되어 생성 후 3초 뒤 순차적으로 소멸하며, 소멸된 만큼 그릴 수 있는 잉크 잔여량이 회복됩니다.
+- **페널티 시스템 (의도된 시스템 렉):**
+    - 화면에 적이 많아질수록 가상 커서가 실제 마우스 위치를 쫓아가는 속도(Lerp 보간치)를 낮춰 무거운 조작 지연(Input Lag)을 유발, 정보 과잉으로 인한 '시스템 과부하'를 물리적으로 체감하게 했습니다.
+- **Player & Enemy AI (본체 조작 및 적 패턴):**
+    - 방화벽에만 의존하지 않고, WASD로 침대에 누운 플레이어 본체를 직접 조작하여 다가오는 적을 회피해야 합니다.
+    - 방화벽에 튕기는 '일반 바이러스', 선을 강제로 지우는 '라인 포식자', 거대한 질량으로 선을 밀어내는 '과부하 패킷' 등 다양한 성질의 적 개체를 혼합 스폰하여 플레이어의 다중 방어를 요구합니다.
+
+## **💡 기술적 도전 및 문제 해결 (Troubleshooting)**
+
+본 프로젝트는 단기간(12일) 해커톤 개발 중 발생한 물리 엔진 및 렌더링 한계를 다음과 같은 아이디어로 극복하고 최적화했습니다.
+
+**[Phase 1 트러블슈팅]**
+
+- **절차적 맵 난수 보정:** 완전 무작위 맵 생성 시 절대 닿을 수 없는 공백 지대가 생기는 억울한 낙사를 막기 위해, '이전 발판 위치'를 기준점으로 삼아 플레이어의 점프 반경 내에서만 스폰되도록 논리적 제약식을 추가했습니다.
+- **Raycast 바닥 감지 오작동 픽스:** 공중에서 적에게 피격되어 날아가는 도중 벽면에 닿으면 바닥으로 착각해 공중 점프가 초기화되는 물리 버그가 있었습니다. 피격 직후 0.2~0.3초 동안은 바닥 감지 Raycast 연산을 강제 무시(Return)하여 공중 물리 판정의 신뢰도를 높였습니다.
+- **물리 사출 글리치 해결:** 알림창 탄환의 장력을 유니티 내장 Joint로 묶으면 지형에 꼈을 때 우주로 날아가는 사출 현상이 일어났습니다. 이를 단발성 임펄스(`Rigidbody2D.AddForce`) 하향 타격 방식으로 교체해 직관적인 물리 조작감과 안정성을 모두 잡았습니다.
+
+**[Phase 2 트러블슈팅]**
+
+- **EdgeCollider2D 가비지 컬렉터(GC) 폭주 최적화:** 실시간 드로잉 시 매 프레임 정점 배열을 물리 콜라이더에 재할당하면서 극심한 프레임 드랍(실제 끊김)이 유발되었습니다. 마우스 이전 위치와의 거리가 0.15 Unit 이상일 때만 정점을 갱신하도록 필터링을 걸어 GC 스파이크를 완벽히 해결했습니다.
+- **유니티 자체 물리 엔진의 역이용 (과부하 패킷 관통 버그):** 무거운 적이 얇은 방화벽 선을 비집고 뚫는 관통 오류를 고치기 위해 복잡한 수식을 짜는 대신, 충돌 순간 선을 `Dynamic` 상태로 바꾸고 선형 저항(Linear Drag)을 극대화했습니다. 덕분에 바리케이드가 적중량에 밀려나는 듯한 아주 자연스럽고 묵직한 물리 연출로 승화시켰습니다.
+- **자료구조(Queue) 파괴 현상 개선:** 선형 큐로 관리되는 방화벽 중간을 라인 포식자 몬스터가 스치면 데이터 중간 인덱스를 지울 수 없어 렌더링이 깨졌습니다. 접촉 위치와 상관없이 무조건 큐의 앞부분(선의 꼬리)부터 순차적으로 정점을 지우는(Dequeue) 방식으로 로직을 단순화하여 메모리 누수를 원천 차단했습니다.
+
+## **📸 사진**
+
+[시작화면]
+
+![image.png](image.png)
+
+[인트로]
+
+![image.png](image%201.png)
+
+![image.png](image%202.png)
+
+[게임1]
+
+![image.png](image%203.png)
+
+[전환씬]
+
+![image.png](image%204.png)
+
+[게임2]
+
+![image.png](image%205.png)
+
+[엔딩]
+
+![image.png](image%206.png)
+
+![image.png](image%207.png)
+
+## **🙋‍♂️ 팀원 및 역할 (Team Roles)**
+
+- **박민준 (minjun)**: 클라이언트 개발 [Phase 1]
+    - 2D 수직 플랫포머 핵심 물리 엔진 및 플레이어 컨트롤러(PlayerController) 구현
+    - 청크 기반 절차적 맵 생성 로직(LevelGenerator) 및 오브젝트 풀링 최적화
+    - 시한부 발판 기믹(PlatformTimer) 및 즉사 판정 글리치 파도(RisingDataFlood) 구현
+- **김태희 (taehee)**: 클라이언트 개발 및 연출 [Phase 1]
+    - 인트로 씬 컨트롤러 및 타이핑 이펙트, 케이블 데이터 흐름 연출
+    - 팝업 광고 스폰 매니저(AdPopupManager) 기믹 개발
+    - 절차적 오디오(ProceduralAudioHelper) 연출 구현
+- **김수연 (suyeon)**: 클라이언트 개발 [Phase 2]
+    - 게임 매니저(GameManager) 및 전반적 씬 흐름 제어
+    - 탑다운 플레이어 이동 로직 및 체력(HP) 상태 관리 구현
+    - 적 개체(StandardEnemy) 중심 방향 돌진 및 피격 로직 구현
+- **이유진 (yujin)**: 클라이언트 개발 [Phase 2]
+    - 마우스 드로잉 방화벽 그리기(LineDrawer) 및 펜스 충돌(LineCollision) 물리 구현
+    - 잉크 정점 소멸 로직(Stroke) 및 UI 연동
+    - 정보 과잉 체감을 위한 가상 커서 조작 지연 시뮬레이션(LagCursor) 개발
