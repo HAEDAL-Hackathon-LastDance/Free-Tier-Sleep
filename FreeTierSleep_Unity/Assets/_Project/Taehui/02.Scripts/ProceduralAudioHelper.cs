@@ -100,5 +100,28 @@ namespace Taehui
             clip.SetData(samples, 0);
             return clip;
         }
+
+        /// <summary>
+        /// 버튼 호버/선택용 아주 짧은 레트로 비프음 (20ms 고주파 클릭)
+        /// </summary>
+        public static AudioClip CreateHoverSound()
+        {
+            int sampleRate = 44100;
+            float duration = 0.02f; // 20ms
+            int sampleCount = (int)(sampleRate * duration);
+            float[] samples = new float[sampleCount];
+
+            for (int i = 0; i < sampleCount; i++)
+            {
+                float t = (float)i / sampleRate;
+                float envelope = Mathf.Exp(-200f * t); // 극히 빠른 감쇠
+                float tone = Mathf.Sin(2f * Mathf.PI * 1800f * t); // 1800Hz 아주 높은 고주파음
+                samples[i] = tone * envelope * 0.15f; // 작고 선명한 비프음
+            }
+
+            AudioClip clip = AudioClip.Create("HoverSFX", sampleCount, 1, sampleRate, false);
+            clip.SetData(samples, 0);
+            return clip;
+        }
     }
 }

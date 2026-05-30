@@ -19,6 +19,7 @@ namespace Taehui
 
         private void Awake()
         {
+            typingSpeed = 0.03f; // 0.1초는 너무 느려 대사가 짤리는 현상이 발생하므로 0.03초(30ms)로 강제 지정
             textComponent = GetComponent<TMP_Text>();
             // 오디오 소스 추가 혹은 참조
             audioSource = GetComponent<AudioSource>();
