@@ -172,6 +172,17 @@ namespace Taehui
         }
 
         /// <summary>
+        /// 설정창 닫기 버튼 이벤트
+        /// </summary>
+        public void CloseConfig()
+        {
+            if (optionsPopup != null)
+            {
+                optionsPopup.SetActive(false);
+            }
+        }
+
+        /// <summary>
         /// 종료 버튼 이벤트
         /// </summary>
         public void Disconnect()
@@ -179,6 +190,8 @@ namespace Taehui
             if (isTransitioning) return;
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
+#elif UNITY_WEBGL
+            Application.OpenURL("about:blank");
 #else
             Application.Quit();
 #endif

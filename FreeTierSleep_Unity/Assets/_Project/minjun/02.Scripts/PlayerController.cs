@@ -377,6 +377,8 @@ public class PlayerController : MonoBehaviour
             }
         }
 
+        Phase1AudioManager.Instance?.PlayGlitch();
+
         if (currentHp <= 0)
         {
             Die();

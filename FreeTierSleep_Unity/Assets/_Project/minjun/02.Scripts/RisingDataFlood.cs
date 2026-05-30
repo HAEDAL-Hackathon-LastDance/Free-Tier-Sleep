@@ -66,6 +66,7 @@ public class RisingDataFlood : MonoBehaviour
             {
                 riseSpeed = baseRiseSpeed * step1Multiplier;
                 step1Applied = true;
+                Phase1AudioManager.Instance?.PlayWarning();
             }
 
             // Y=600 돌파 시 1.2배 가속 (기본 속도 기준, 1회만 적용)
@@ -73,6 +74,7 @@ public class RisingDataFlood : MonoBehaviour
             {
                 riseSpeed = baseRiseSpeed * step2Multiplier;
                 step2Applied = true;
+                Phase1AudioManager.Instance?.PlayWarning();
             }
         }
 

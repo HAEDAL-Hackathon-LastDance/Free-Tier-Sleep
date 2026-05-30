@@ -72,6 +72,11 @@ public class GameManager : MonoBehaviour
         {
             ClearGame();
         }
+
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        if (Input.GetKeyDown(KeyCode.R))
+            ClearGame();
+#endif
     }
 
     IEnumerator WaveRoutine()
